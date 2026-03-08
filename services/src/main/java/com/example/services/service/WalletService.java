@@ -50,7 +50,7 @@ public class WalletService {
 
     }
 
-    public WalletResponse addWallet(String userId, BigDecimal amount) {
+    public WalletResponse addBalance(String userId, BigDecimal amount) {
         Wallet wallet = walletRepository.findByUserId(userId)
                 .orElseThrow(() -> new AppException(
                         ErrorStatus.WALLET_NOT_FOUND.getCode(), ErrorStatus.WALLET_NOT_FOUND.getMessage()));
