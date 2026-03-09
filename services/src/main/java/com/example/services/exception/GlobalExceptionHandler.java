@@ -1,6 +1,6 @@
 package com.example.services.exception;
 
-import com.example.services.dto.response.ApiResponse;
+import com.example.services.dto.response.APIResponse;
 import com.example.services.exception.enums.ErrorCode;
 import jakarta.validation.ConstraintViolation;
 import lombok.extern.slf4j.Slf4j;
@@ -24,9 +24,9 @@ public class GlobalExceptionHandler {
      * ✅ Xử lý AppException (chính xác)
      */
     @ExceptionHandler(value = AppException.class)  // ← Type phải match
-    public ResponseEntity<ApiResponse> handleAppException(AppException e) {
+    public ResponseEntity<APIResponse> handleAppException(AppException e) {
         ErrorCode errorCode = e.getErrorCode();
-        ApiResponse apiResponse = new ApiResponse();
+        APIResponse apiResponse = new APIResponse();
 
         if (!Objects.isNull(errorCode)) {
             apiResponse.setCode(errorCode.getCode());
@@ -41,9 +41,9 @@ public class GlobalExceptionHandler {
      * Xử lý AccessDeniedException
      */
     @ExceptionHandler(value = AccessDeniedException.class)
-    public ResponseEntity<ApiResponse> handleAccessDeniedException(AccessDeniedException e) {
+    public ResponseEntity<APIResponse> handleAccessDeniedException(AccessDeniedException e) {
         ErrorCode errorCode = ErrorCode.UNAUTHORIZED;
-        ApiResponse apiResponse = new ApiResponse();
+        APIResponse apiResponse = new APIResponse();
 
         apiResponse.setCode(errorCode.getCode());
         apiResponse.setMessage(errorCode.getMessage());
@@ -55,7 +55,7 @@ public class GlobalExceptionHandler {
      * Xử lý Validation Error
      */
     @ExceptionHandler(value = MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse> handleMethodArgumentNotValidException(
+    public ResponseEntity<APIResponse> handleMethodArgumentNotValidException(
             MethodArgumentNotValidException e) {
 
         String enumKey = Objects.requireNonNull(e.getFieldError()).getDefaultMessage();
@@ -75,7 +75,7 @@ public class GlobalExceptionHandler {
             log.warn("Invalid enum key: {}", enumKey);
         }
 
-        ApiResponse apiResponse = new ApiResponse();
+        APIResponse apiResponse = new APIResponse();
         apiResponse.setCode(errorCode.getCode());
         apiResponse.setMessage(
                 Objects.nonNull(attributes)
@@ -90,10 +90,10 @@ public class GlobalExceptionHandler {
      * ✅ Xử lý Exception chung (CUỐI CÙNG)
      */
     @ExceptionHandler(value = Exception.class)
-    public ResponseEntity<ApiResponse> handleGeneral(Exception e) {
+    public ResponseEntity<APIResponse> handleGeneral(Exception e) {
         log.error("Unexpected error: {}", e.getMessage(), e);
 
-        ApiResponse apiResponse = new ApiResponse();
+        APIResponse apiResponse = new APIResponse();
         apiResponse.setCode(500);
         apiResponse.setMessage("Internal Server Error");
 

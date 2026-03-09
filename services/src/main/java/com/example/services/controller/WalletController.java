@@ -1,7 +1,7 @@
 package com.example.services.controller;
 
 import com.example.services.dto.request.UpdateWalletRequest;
-import com.example.services.dto.response.ApiResponse;
+import com.example.services.dto.response.APIResponse;
 import com.example.services.dto.response.WalletResponse;
 import com.example.services.service.WalletService;
 import jakarta.validation.Valid;
@@ -24,9 +24,9 @@ public class WalletController {
      * GET /api/wallet/{userId}
      */
     @GetMapping("/{userId}")
-    public ApiResponse<WalletResponse> getWallet(@PathVariable UUID userId) {
+    public APIResponse<WalletResponse> getWallet(@PathVariable UUID userId) {
         WalletResponse response = walletService.getWalletForUser(userId);
-        return ApiResponse.<WalletResponse>builder()
+        return APIResponse.<WalletResponse>builder()
                 .data(response)
                 .build();
     }
@@ -37,11 +37,11 @@ public class WalletController {
      * Body: {"balance": 10000.00}
      */
     @PutMapping("/{userId}")
-    public ApiResponse<WalletResponse> updateWallet(
+    public APIResponse<WalletResponse> updateWallet(
             @PathVariable UUID userId,
             @RequestBody @Valid UpdateWalletRequest request) {
         WalletResponse response = walletService.updateWallet(userId, request);
-        return ApiResponse.<WalletResponse>builder()
+        return APIResponse.<WalletResponse>builder()
                 .data(response)
                 .build();
     }
@@ -51,11 +51,11 @@ public class WalletController {
      * POST /api/wallet/{userId}/add?amount=100.00
      */
     @PostMapping("/{userId}/add")
-    public ApiResponse<WalletResponse> addBalance(
+    public APIResponse<WalletResponse> addBalance(
             @PathVariable UUID userId,
             @RequestParam BigDecimal amount) {
         WalletResponse response = walletService.addBalance(userId, amount);
-        return ApiResponse.<WalletResponse>builder()
+        return APIResponse.<WalletResponse>builder()
                 .data(response)
                 .build();
     }
@@ -65,11 +65,11 @@ public class WalletController {
      * POST /api/wallet/{userId}/deduct?amount=50.00
      */
     @PostMapping("/{userId}/deduct")
-    public ApiResponse<WalletResponse> deductBalance(
+    public APIResponse<WalletResponse> deductBalance(
             @PathVariable UUID userId,
             @RequestParam BigDecimal amount) {
         WalletResponse response = walletService.deductBalance(userId, amount);
-        return ApiResponse.<WalletResponse>builder()
+        return APIResponse.<WalletResponse>builder()
                 .data(response)
                 .build();
     }
@@ -79,9 +79,9 @@ public class WalletController {
      * GET /api/wallet/{userId}/balance
      */
     @GetMapping("/{userId}/balance")
-    public ApiResponse<BigDecimal> getBalance(@PathVariable UUID userId) {
+    public APIResponse<BigDecimal> getBalance(@PathVariable UUID userId) {
         BigDecimal balance = walletService.getBalance(userId);
-        return ApiResponse.<BigDecimal>builder()
+        return APIResponse.<BigDecimal>builder()
                 .data(balance)
                 .build();
     }

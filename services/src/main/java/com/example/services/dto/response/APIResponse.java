@@ -10,7 +10,7 @@ import lombok.*;
 @Getter
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ApiResponse<T> {
+public class APIResponse<T> {
 
     private int code;
     private String message;
