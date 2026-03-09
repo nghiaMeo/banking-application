@@ -1,7 +1,7 @@
 package com.example.services.exception;
 
 
-import com.example.services.exception.enums.ErrorStatus;
+import com.example.services.exception.enums.ErrorCode;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -9,7 +9,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public class AppException extends RuntimeException {
 
-    private final int errorCode;
-    private final String message;
+    private ErrorCode errorCode;
+
 
 }

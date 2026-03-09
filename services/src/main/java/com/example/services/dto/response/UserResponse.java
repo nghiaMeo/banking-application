@@ -11,7 +11,6 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
 public class UserResponse {
 
     private UUID id;
@@ -19,4 +18,5 @@ public class UserResponse {
     private String fullName;
     private String phone;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

@@ -11,6 +11,8 @@ import org.mapstruct.MappingTarget;
 @Mapper(componentModel = "spring")
 public interface UserMapper {
     @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "wallet", ignore = true)
     User toEntity(CreateUserRequest request);
 
     UserResponse toResponse(User user);
@@ -18,21 +20,15 @@ public interface UserMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    default void updateUserSelectiveFields(UpdateUserRequest request, @MappingTarget User user) {
-        if (request.getEmail() != null && !request.getEmail().isEmpty()) {
-            user.setEmail(request.getEmail());
-        }
+    @Mapping(target = "wallet", ignore = true)
+    void updateUserFromRequest(UpdateUserRequest request, @MappingTarget User user);
 
-        if (request.getFullName() != null && !request.getFullName().isEmpty()) {
-            user.setFullName(request.getFullName());
-        }
-
-        if (request.getPhone() != null && !request.getPhone().isEmpty()) {
-            user.setPhone(request.getPhone());
-        }
-
-        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
-            user.setPassword(request.getPassword());
-        }
+    // ✅ Map + normalize
+    default User toEntityWithNormalization(CreateUserRequest request) {
+        User user = toEntity(request);
+        user.setEmail(request.getEmail().trim().toLowerCase());
+        user.setPhone(request.getPhone().trim());
+        user.setFullName(request.getFullName().trim());
+        return user;
     }
 }

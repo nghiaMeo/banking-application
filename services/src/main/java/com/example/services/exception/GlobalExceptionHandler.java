@@ -1,40 +1,107 @@
 package com.example.services.exception;
 
 import com.example.services.dto.response.ApiResponse;
-import com.example.services.exception.enums.ErrorStatus;
+import com.example.services.exception.enums.ErrorCode;
+import jakarta.validation.ConstraintViolation;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.HashMap;
+import java.nio.file.AccessDeniedException;
 import java.util.Map;
+import java.util.Objects;
 
-@RestControllerAdvice
+@ControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<Object>> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getFieldErrors().forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
-        return ResponseEntity.badRequest().body(ApiResponse.error(errors.toString()));
 
+    private static final String MIN_ATTRIBUTE = "min";
+
+    /**
+     * ✅ Xử lý AppException (chính xác)
+     */
+    @ExceptionHandler(value = AppException.class)  // ← Type phải match
+    public ResponseEntity<ApiResponse> handleAppException(AppException e) {
+        ErrorCode errorCode = e.getErrorCode();
+        ApiResponse apiResponse = new ApiResponse();
+
+        if (!Objects.isNull(errorCode)) {
+            apiResponse.setCode(errorCode.getCode());
+            apiResponse.setMessage(errorCode.getMessage());
+        }
+
+        return ResponseEntity.status(errorCode != null ? errorCode.getHttpStatusCode() : HttpStatus.BAD_REQUEST)
+                .body(apiResponse);
     }
 
+    /**
+     * Xử lý AccessDeniedException
+     */
+    @ExceptionHandler(value = AccessDeniedException.class)
+    public ResponseEntity<ApiResponse> handleAccessDeniedException(AccessDeniedException e) {
+        ErrorCode errorCode = ErrorCode.UNAUTHORIZED;
+        ApiResponse apiResponse = new ApiResponse();
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<Object>> handleGeneral(Exception ex) {
-        return ResponseEntity.badRequest().body(ApiResponse.error("Internal Server Error"));
+        apiResponse.setCode(errorCode.getCode());
+        apiResponse.setMessage(errorCode.getMessage());
+
+        return ResponseEntity.status(errorCode.getHttpStatusCode()).body(apiResponse);
     }
 
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ApiResponse<Object>> handleGeneral(RuntimeException ex) {
-        return ResponseEntity.status(ErrorStatus.BAD_REQUEST.getCode())
-                .body(ApiResponse
-                        .builder()
-                        .success(false)
-                        .message(ex.getMessage())
-                        .statusCode(ErrorStatus.BAD_REQUEST.getCode())
-                        .data(ErrorStatus.BAD_REQUEST.getMessage())
-                        .build());
+    /**
+     * Xử lý Validation Error
+     */
+    @ExceptionHandler(value = MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse> handleMethodArgumentNotValidException(
+            MethodArgumentNotValidException e) {
+
+        String enumKey = Objects.requireNonNull(e.getFieldError()).getDefaultMessage();
+        ErrorCode errorCode = ErrorCode.INVALID_KEY;
+        Map<String, Object> attributes = null;
+
+        try {
+            errorCode = ErrorCode.valueOf(enumKey);
+            var constraintViolations = e.getBindingResult()
+                    .getAllErrors()
+                    .getFirst()
+                    .unwrap(ConstraintViolation.class);
+
+            attributes = constraintViolations.getConstraintDescriptor().getAttributes();
+
+        } catch (IllegalArgumentException ex) {
+            log.warn("Invalid enum key: {}", enumKey);
+        }
+
+        ApiResponse apiResponse = new ApiResponse();
+        apiResponse.setCode(errorCode.getCode());
+        apiResponse.setMessage(
+                Objects.nonNull(attributes)
+                        ? mapAttributes(errorCode.getMessage(), attributes)
+                        : errorCode.getMessage()
+        );
+
+        return ResponseEntity.badRequest().body(apiResponse);
+    }
+
+    /**
+     * ✅ Xử lý Exception chung (CUỐI CÙNG)
+     */
+    @ExceptionHandler(value = Exception.class)
+    public ResponseEntity<ApiResponse> handleGeneral(Exception e) {
+        log.error("Unexpected error: {}", e.getMessage(), e);
+
+        ApiResponse apiResponse = new ApiResponse();
+        apiResponse.setCode(500);
+        apiResponse.setMessage("Internal Server Error");
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponse);
+    }
+
+    private String mapAttributes(String message, Map<String, Object> attributes) {
+        String minValue = attributes.get(MIN_ATTRIBUTE).toString();
+        return message.replace("{" + MIN_ATTRIBUTE + "}", minValue);
     }
 }

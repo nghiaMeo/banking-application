@@ -21,20 +21,24 @@ public class UserController {
 
     @PostMapping
     public ApiResponse<UserResponse> createUser(@RequestBody @Valid CreateUserRequest request) {
-        return ApiResponse.success(userService.create(request));
+        return ApiResponse.<UserResponse>builder()
+                .data(userService.create(request))
+                .build();
     }
 
     @GetMapping("/all")
-    public ResponseEntity<ApiResponse<List<UserResponse>>> getAllUsers() {
-        return ResponseEntity.ok(ApiResponse.success(userService.allUsers()));
+    public ApiResponse<List<UserResponse>> getAllUsers() {
+        return ApiResponse.<List<UserResponse>>builder()
+                .data(userService.allUsers())
+                .build();
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<UserResponse>> updateUser(
+    public UserResponse updateUser(
             @PathVariable String id,
             @RequestBody @Valid UpdateUserRequest request) {
         UserResponse response = userService.updateUser(UUID.fromString(id), request);
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return userService.updateUser(UUID.fromString(id),request);
     }
 
 }

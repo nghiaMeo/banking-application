@@ -6,47 +6,83 @@ import com.example.services.dto.response.WalletResponse;
 import com.example.services.service.WalletService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.UUID;
+
 
 @RestController
 @RequestMapping("/api/wallet")
 @RequiredArgsConstructor
 public class WalletController {
+
     private final WalletService walletService;
 
+    /**
+     * Lấy wallet info
+     * GET /api/wallet/{userId}
+     */
     @GetMapping("/{userId}")
-    public ResponseEntity<ApiResponse<WalletResponse>> getWallet(@PathVariable String userId) {
+    public ApiResponse<WalletResponse> getWallet(@PathVariable UUID userId) {
         WalletResponse response = walletService.getWalletForUser(userId);
-
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ApiResponse.<WalletResponse>builder()
+                .data(response)
+                .build();
     }
 
-    @PutMapping("/{userId}/add")
-    public ResponseEntity<ApiResponse<WalletResponse>> addBalance(@PathVariable String userId,
-                                                                  @RequestParam BigDecimal amount) {
-        WalletResponse response = walletService.addBalance(userId, amount);
-        return ResponseEntity.ok(ApiResponse.success(response));
-    }
-
-    @PostMapping("/{userId}")
-    public ResponseEntity<ApiResponse<WalletResponse>> updateWallet(@PathVariable String userId,
-                                                                    @RequestBody @Valid UpdateWalletRequest request) {
+    /**
+     * Update/Set balance (SET giá trị)
+     * PUT /api/wallet/{userId}
+     * Body: {"balance": 10000.00}
+     */
+    @PutMapping("/{userId}")
+    public ApiResponse<WalletResponse> updateWallet(
+            @PathVariable UUID userId,
+            @RequestBody @Valid UpdateWalletRequest request) {
         WalletResponse response = walletService.updateWallet(userId, request);
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ApiResponse.<WalletResponse>builder()
+                .data(response)
+                .build();
     }
 
+    /**
+     * Add Balance (Nạp tiền)
+     * POST /api/wallet/{userId}/add?amount=100.00
+     */
+    @PostMapping("/{userId}/add")
+    public ApiResponse<WalletResponse> addBalance(
+            @PathVariable UUID userId,
+            @RequestParam BigDecimal amount) {
+        WalletResponse response = walletService.addBalance(userId, amount);
+        return ApiResponse.<WalletResponse>builder()
+                .data(response)
+                .build();
+    }
+
+    /**
+     *  Deduct Balance (Rút tiền)
+     * POST /api/wallet/{userId}/deduct?amount=50.00
+     */
     @PostMapping("/{userId}/deduct")
-    public ResponseEntity<ApiResponse<WalletResponse>> deductBalance(@PathVariable String userId, @RequestParam BigDecimal amount) {
+    public ApiResponse<WalletResponse> deductBalance(
+            @PathVariable UUID userId,
+            @RequestParam BigDecimal amount) {
         WalletResponse response = walletService.deductBalance(userId, amount);
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ApiResponse.<WalletResponse>builder()
+                .data(response)
+                .build();
     }
 
+    /**
+     * Lấy số dư
+     * GET /api/wallet/{userId}/balance
+     */
     @GetMapping("/{userId}/balance")
-    public ResponseEntity<ApiResponse<BigDecimal>> getBalance(@PathVariable String userId) {
+    public ApiResponse<BigDecimal> getBalance(@PathVariable UUID userId) {
         BigDecimal balance = walletService.getBalance(userId);
-        return ResponseEntity.ok(ApiResponse.success(balance));
+        return ApiResponse.<BigDecimal>builder()
+                .data(balance)
+                .build();
     }
 }

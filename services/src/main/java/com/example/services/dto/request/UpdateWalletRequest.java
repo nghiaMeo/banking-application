@@ -11,12 +11,11 @@ import java.math.BigDecimal;
 
 
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdateWalletRequest {
 
     @NotNull(message = "Balance can't be null")
-    @DecimalMin(value = "0.0", message = "Balance must be greater than or equal to 0")
+    @DecimalMin(value = "0.01", message = "Balance must be greater than or equal to 0")
     private BigDecimal balance;
 }

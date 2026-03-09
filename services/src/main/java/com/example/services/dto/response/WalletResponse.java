@@ -12,13 +12,25 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class WalletResponse {
-
     private UUID id;
-    private String userId;
     private BigDecimal balance;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    // ✅ Nested User Object
+    private UserInfo user;
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class UserInfo {
+        private String id;
+        private String email;
+        private String fullName;
+        private String phone;
+        private LocalDateTime createdAt;
+    }
 }
+
