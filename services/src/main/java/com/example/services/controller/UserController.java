@@ -13,6 +13,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.annotations.Parameter;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -63,12 +65,21 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-
+    @Operation(summary = "update user", description = "update user information (email, full name, phone, password)")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(responseCode = "200", description = "User update successfully"),
+                    @ApiResponse(responseCode = "400", description = "Invalid input"),
+                    @ApiResponse(responseCode = "404", description = "User not found"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error")
+            }
+    )
     public UserResponse updateUser(
             @PathVariable String id,
             @RequestBody @Valid UpdateUserRequest request) {
         UserResponse response = userService.updateUser(UUID.fromString(id), request);
         return userService.updateUser(UUID.fromString(id), request);
     }
+
 
 }
