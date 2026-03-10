@@ -33,8 +33,7 @@ public class GlobalExceptionHandler {
             apiResponse.setMessage(errorCode.getMessage());
         }
 
-        return ResponseEntity.status(errorCode != null ? errorCode.getHttpStatusCode() : HttpStatus.BAD_REQUEST)
-                .body(apiResponse);
+        return ResponseEntity.status(errorCode != null ? errorCode.getHttpStatusCode() : HttpStatus.BAD_REQUEST).body(apiResponse);
     }
 
     /**
@@ -55,8 +54,7 @@ public class GlobalExceptionHandler {
      * Xử lý Validation Error
      */
     @ExceptionHandler(value = MethodArgumentNotValidException.class)
-    public ResponseEntity<APIResponse> handleMethodArgumentNotValidException(
-            MethodArgumentNotValidException e) {
+    public ResponseEntity<APIResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
 
         String enumKey = Objects.requireNonNull(e.getFieldError()).getDefaultMessage();
         ErrorCode errorCode = ErrorCode.INVALID_KEY;
@@ -64,10 +62,7 @@ public class GlobalExceptionHandler {
 
         try {
             errorCode = ErrorCode.valueOf(enumKey);
-            var constraintViolations = e.getBindingResult()
-                    .getAllErrors()
-                    .getFirst()
-                    .unwrap(ConstraintViolation.class);
+            var constraintViolations = e.getBindingResult().getAllErrors().getFirst().unwrap(ConstraintViolation.class);
 
             attributes = constraintViolations.getConstraintDescriptor().getAttributes();
 
@@ -77,11 +72,8 @@ public class GlobalExceptionHandler {
 
         APIResponse apiResponse = new APIResponse();
         apiResponse.setCode(errorCode.getCode());
-        apiResponse.setMessage(
-                Objects.nonNull(attributes)
-                        ? mapAttributes(errorCode.getMessage(), attributes)
-                        : errorCode.getMessage()
-        );
+        apiResponse.setMessage(Objects.nonNull(attributes) ?
+                mapAttributes(errorCode.getMessage(), attributes) : errorCode.getMessage());
 
         return ResponseEntity.badRequest().body(apiResponse);
     }
@@ -91,12 +83,16 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(value = Exception.class)
     public ResponseEntity<APIResponse> handleGeneral(Exception e) {
-        log.error("Unexpected error: {}", e.getMessage(), e);
-
         APIResponse apiResponse = new APIResponse();
         apiResponse.setCode(500);
         apiResponse.setMessage("Internal Server Error");
-
+        if (e.getMessage() != null && e.getMessage().contains("No static resource")) {
+            APIResponse apiResponses = new APIResponse();
+            apiResponse.setCode(404);
+            apiResponse.setMessage("Resource not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(apiResponses);
+        }
+        log.error("Unexpected error: {}", e.getMessage(), e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponse);
     }
 
