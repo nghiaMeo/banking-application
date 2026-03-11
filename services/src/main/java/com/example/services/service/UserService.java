@@ -13,6 +13,7 @@ import com.example.services.repository.UserRepository;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -26,6 +27,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final WalletService walletService;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     public UserResponse create(CreateUserRequest request) {
         var emailRequest = request.getEmail();
@@ -37,7 +39,11 @@ public class UserService {
         if (userRepository.existsByPhone(phoneRequest)) {
             throw new AppException(ErrorCode.PHONE_NUMBER_ALREADY_EXISTS);
         }
-        User user = userMapper.toEntity(request);
+
+        User user = userMapper.toEntityWithNormalization(request);
+
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+
         User savedUser = userRepository.save(user);
 
         Wallet wallet = walletService.createWalletForUser(user);
@@ -83,7 +89,7 @@ public class UserService {
         // Password
         var passwordRequest = request.getPassword();
         if (hasValue(passwordRequest)) {
-            user.setPassword(passwordRequest);
+            user.setPassword(passwordEncoder.encode(passwordRequest));
         }
 
         User updated = userRepository.save(user);
