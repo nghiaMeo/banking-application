@@ -15,6 +15,13 @@ public interface UserMapper {
     @Mapping(target = "wallet", ignore = true)
     User toEntity(CreateUserRequest request);
 
+
+    @Mapping(source = "id", target = "id")
+    @Mapping(source = "email", target = "email")
+    @Mapping(source = "fullName", target = "fullName")
+    @Mapping(source = "phone", target = "phone")
+    @Mapping(source = "createdAt", target = "createdAt")
+    @Mapping(source = "updatedAt", target = "updatedAt")
     UserResponse toResponse(User user);
 
     @Mapping(target = "id", ignore = true)

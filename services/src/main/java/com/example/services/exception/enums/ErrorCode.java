@@ -34,6 +34,8 @@ public enum ErrorCode {
     INVALID_KEY(1012, "Invalid Key", HttpStatus.BAD_REQUEST),
     INVALID_AMOUNT(1013, "Invalid Amount", HttpStatus.BAD_REQUEST),
     AMOUNT_IS_ZERO(1013, "Amount is zero", HttpStatus.BAD_REQUEST),
+    BAD_REQUEST(9000, "User Not Found", HttpStatus.BAD_REQUEST),
+
     ;
 
     private int code;
