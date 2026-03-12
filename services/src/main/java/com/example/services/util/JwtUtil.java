@@ -19,17 +19,22 @@ import java.util.UUID;
 @Slf4j
 public class JwtUtil {
 
-    @Value("")
+    @Value("${jwt.secret}")
     private String secretKey;
 
-    @Value("")
+    @Value("${jwt.expiration}")
     private long accessTokenExpiration;
 
-    @Value("")
+    @Value("${jwt.refresh-expiration}")
     private long refreshTokenExpiration;
+
 
     public String generateToken(UUID userId, String email) {
         return generateToken(userId, email, accessTokenExpiration, "ACCESS");
+    }
+
+    public String generateRefreshToken(UUID userId, String email) {
+        return generateToken(userId, email, refreshTokenExpiration, "REFRESH");
     }
 
     private String generateToken(UUID userId, String email, long accessTokenExpiration, String tokenType) {
@@ -53,7 +58,7 @@ public class JwtUtil {
                 .subject(userId.toString())
                 .issuedAt(now)
                 .expiration(expirationDate)
-                .signWith(key, SignatureAlgorithm.ES256)
+                .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
@@ -87,9 +92,9 @@ public class JwtUtil {
 
     }
 
-    public String extractUserId(String token) {
+    public UUID extractUserId(String token) {
         Claims claims = extractClaims(token);
-        return claims != null ? claims.getSubject() : null;
+        return claims != null ? UUID.fromString(claims.getSubject()) : null;
     }
 
     public String extractEmail(String token) {
@@ -97,5 +102,15 @@ public class JwtUtil {
         return claims != null ? claims.getSubject() : null;
     }
 
+    public boolean isTokenExpired(String token) {
+        Claims claims = extractClaims(token);
+
+        return claims != null && claims.getExpiration().before(new Date());
+    }
+
+    public String getTokenType(String token) {
+        Claims claims = extractClaims(token);
+        return claims != null ? (String) claims.get("tokenType") : null;
+    }
 
 }

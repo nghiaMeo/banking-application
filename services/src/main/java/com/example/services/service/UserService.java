@@ -10,12 +10,13 @@ import com.example.services.exception.AppException;
 import com.example.services.exception.enums.ErrorCode;
 import com.example.services.mapper.UserMapper;
 import com.example.services.repository.UserRepository;
-import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -29,6 +30,7 @@ public class UserService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
 
+    @Transactional(rollbackFor = Exception.class)
     public UserResponse create(CreateUserRequest request) {
         var emailRequest = request.getEmail();
         if (userRepository.existsByEmail(emailRequest)) {
@@ -43,6 +45,9 @@ public class UserService {
         User user = userMapper.toEntityWithNormalization(request);
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+//        LocalDateTime now = LocalDateTime.now();
+//        user.setCreatedAt(now);
+//        user.setUpdatedAt(now);
 
         User savedUser = userRepository.save(user);
 
