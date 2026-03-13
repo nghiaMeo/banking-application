@@ -24,7 +24,7 @@ public class WalletService {
     private final WalletMapper walletMapper;
 
     public Wallet createWalletForUser(User user) {
-        Wallet wallet = new Wallet();
+        var wallet = new Wallet();
         wallet.setUser(user);
         wallet.setBalance(BigDecimal.ZERO);
 
@@ -34,12 +34,12 @@ public class WalletService {
     }
 
     public WalletResponse getWalletForUser(UUID userId) {
-        Wallet wallet = walletRepository.findByUserId(userId).orElseThrow(() -> new AppException(ErrorCode.USER_ALREADY_EXISTS));
+        var wallet = walletRepository.findByUserId(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         return walletMapper.toWalletResponse(wallet);
     }
 
     public WalletResponse updateWallet(UUID userId, UpdateWalletRequest updateWalletRequest) {
-        Wallet wallet = walletRepository.findByUserId(userId).orElseThrow(() -> new AppException(ErrorCode.USER_ALREADY_EXISTS));
+        var wallet = walletRepository.findByUserId(userId).orElseThrow(() -> new AppException(ErrorCode.USER_ALREADY_EXISTS));
         wallet.setBalance(updateWalletRequest.getBalance());
         Wallet updated = walletRepository.save(wallet);
         log.info("Wallet balance updated for user: {} to {}", userId, updateWalletRequest.getBalance());
@@ -49,20 +49,20 @@ public class WalletService {
     }
 
     public WalletResponse addBalance(UUID userId, BigDecimal amount) {
-        Wallet wallet = walletRepository.findByUserId(userId).orElseThrow(() -> new AppException(ErrorCode.USER_ALREADY_EXISTS));
+        var wallet = walletRepository.findByUserId(userId).orElseThrow(() -> new AppException(ErrorCode.USER_ALREADY_EXISTS));
 
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new AppException(ErrorCode.INVALID_AMOUNT);
         }
         wallet.setBalance(wallet.getBalance().add(amount));
 
-        Wallet update = walletRepository.save(wallet);
+        var update = walletRepository.save(wallet);
         log.info("Balance added for user: {} amount: {}", userId, amount);
         return walletMapper.toWalletResponse(update);
     }
 
     public WalletResponse deductBalance(UUID userId, BigDecimal amount) {
-        Wallet wallet = walletRepository.findByUserId(userId).orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
+        var wallet = walletRepository.findByUserId(userId).orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
 
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new AppException(ErrorCode.INVALID_AMOUNT);
@@ -72,7 +72,7 @@ public class WalletService {
             throw new AppException(ErrorCode.AMOUNT_IS_ZERO);
         }
         wallet.setBalance(wallet.getBalance().subtract(amount));
-        Wallet update = walletRepository.save(wallet);
+        var update = walletRepository.save(wallet);
         log.info("Balance deducted for user: {} amount: {}", userId, amount);
         return walletMapper.toWalletResponse(update);
     }

@@ -1,6 +1,7 @@
 package com.example.services.entity;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -21,7 +22,6 @@ import java.util.UUID;
 @Table(name = "users")
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -36,10 +36,13 @@ public class User {
 
     private String phone;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
     @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    @Schema(description = "Created timestamp")
     private LocalDateTime createdAt;
 
+    @Column(name = "updated_at")
+    @Schema(description = "Updated timestamp")
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 

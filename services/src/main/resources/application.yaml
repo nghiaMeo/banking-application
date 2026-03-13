@@ -1,3 +1,6 @@
+server:
+  port: 8080
+
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/bank
@@ -11,6 +14,7 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
 springdoc:
   swagger-ui:
     enabled: true
@@ -19,6 +23,12 @@ springdoc:
     tags-sorter: alpha
   api-docs:
     path: /v3/api-docs
+
+jwt:
+  secret: Wzm99ojqlOKdLVXO+TzxUmhgcD8Slz/ml0VsyU1q4VA=
+  expiration: 3600000
+  refresh-expiration: 604800000
+
 
 logging:
   level:
