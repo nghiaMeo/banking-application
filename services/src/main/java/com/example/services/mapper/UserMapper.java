@@ -23,7 +23,6 @@ public interface UserMapper {
     @Mapping(target = "wallet", ignore = true)
     void updateUserFromRequest(UpdateUserRequest request, @MappingTarget User user);
 
-    // ✅ Map + normalize
     default User toEntityWithNormalization(CreateUserRequest request) {
         User user = toEntity(request);
         user.setEmail(request.getEmail().trim().toLowerCase());
