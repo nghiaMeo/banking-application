@@ -1,6 +1,7 @@
 package com.example.services.dto.response;
 
 
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,6 +28,10 @@ public class AuthResponse {
     private Long expiresIn;
 
     @Schema(description = "User information")
-    private UserResponse user;
+    private UserResponse userResponse;
+
+    @Schema(description = "Wallet information")
+    private WalletResponse walletResponse;
+
 
 }

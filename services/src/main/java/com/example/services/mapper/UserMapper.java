@@ -16,12 +16,6 @@ public interface UserMapper {
     User toEntity(CreateUserRequest request);
 
 
-    @Mapping(source = "id", target = "id")
-    @Mapping(source = "email", target = "email")
-    @Mapping(source = "fullName", target = "fullName")
-    @Mapping(source = "phone", target = "phone")
-    @Mapping(source = "createdAt", target = "createdAt")
-    @Mapping(source = "updatedAt", target = "updatedAt")
     UserResponse toResponse(User user);
 
     @Mapping(target = "id", ignore = true)
@@ -30,7 +24,6 @@ public interface UserMapper {
     @Mapping(target = "wallet", ignore = true)
     void updateUserFromRequest(UpdateUserRequest request, @MappingTarget User user);
 
-    // ✅ Map + normalize
     default User toEntityWithNormalization(CreateUserRequest request) {
         User user = toEntity(request);
         user.setEmail(request.getEmail().trim().toLowerCase());
