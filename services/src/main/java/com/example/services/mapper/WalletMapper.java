@@ -2,7 +2,6 @@ package com.example.services.mapper;
 
 import com.example.services.dto.request.UpdateWalletRequest;
 import com.example.services.dto.response.WalletResponse;
-import com.example.services.entity.User;
 import com.example.services.entity.Wallet;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -17,12 +16,5 @@ public interface WalletMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     void updateWallet(UpdateWalletRequest updateWalletRequest, @MappingTarget Wallet wallet);
-
-//    @Mapping(source = "id", target = "id")
-//    @Mapping(source = "email", target = "email")
-//    @Mapping(source = "fullName", target = "fullName")
-//    @Mapping(source = "phone", target = "phone")
-//    @Mapping(source = "createdAt", target = "createdAt")
-//    WalletResponse.UserInfo toUserInfo(User user);
 
 }
