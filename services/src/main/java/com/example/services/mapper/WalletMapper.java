@@ -9,7 +9,6 @@ import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")
 public interface WalletMapper {
-    @Mapping(source = "user", target = "user")
     WalletResponse toWalletResponse(Wallet wallet);
 
     @Mapping(target = "user", ignore = true)

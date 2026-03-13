@@ -36,12 +36,9 @@ public class AuthService {
 
         var userResponseId = userResponse.getId();
 
-        var walletResponse = walletService.getWalletForUser(userResponseId);
-
 
         return AuthResponse.builder()
                 .userResponse(userResponse)
-                .walletResponse(walletResponse)
                 .build();
     }
 
@@ -58,6 +55,7 @@ public class AuthService {
         var accessToken = jwtUtil.generateToken(user.getId(), user.getEmail());
         var refreshToken = jwtUtil.generateRefreshToken(user.getId(), user.getEmail());
         var userLogin = userMapper.toResponse(user);
+        var walletUser = walletService.getWalletForUser(user.getId());
 
         log.info("User logged in: {}", user.getEmail());
 
@@ -67,6 +65,7 @@ public class AuthService {
                 .refreshToken(refreshToken)
                 .tokenType("Bearer")
                 .expiresIn(3600000L)
+                .walletResponse(walletUser)
                 .userResponse(userLogin)
                 .build();
 
