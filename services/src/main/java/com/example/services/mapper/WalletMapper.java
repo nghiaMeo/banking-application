@@ -18,11 +18,11 @@ public interface WalletMapper {
     @Mapping(target = "updatedAt", ignore = true)
     void updateWallet(UpdateWalletRequest updateWalletRequest, @MappingTarget Wallet wallet);
 
-    @Mapping(source = "id", target = "id")
-    @Mapping(source = "email", target = "email")
-    @Mapping(source = "fullName", target = "fullName")
-    @Mapping(source = "phone", target = "phone")
-    @Mapping(source = "createdAt", target = "createdAt")
-    WalletResponse.UserInfo toUserInfo(User user);
+//    @Mapping(source = "id", target = "id")
+//    @Mapping(source = "email", target = "email")
+//    @Mapping(source = "fullName", target = "fullName")
+//    @Mapping(source = "phone", target = "phone")
+//    @Mapping(source = "createdAt", target = "createdAt")
+//    WalletResponse.UserInfo toUserInfo(User user);
 
 }

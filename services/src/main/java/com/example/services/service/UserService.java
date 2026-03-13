@@ -42,19 +42,17 @@ public class UserService {
             throw new AppException(ErrorCode.PHONE_NUMBER_ALREADY_EXISTS);
         }
 
-        User user = userMapper.toEntityWithNormalization(request);
-
+        var user = userMapper.toEntityWithNormalization(request);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-//        LocalDateTime now = LocalDateTime.now();
-//        user.setCreatedAt(now);
-//        user.setUpdatedAt(now);
 
-        User savedUser = userRepository.save(user);
+        var savedUser = userRepository.save(user);
 
-        Wallet wallet = walletService.createWalletForUser(user);
+        Wallet wallet = walletService.createWalletForUser(savedUser);
         savedUser.setWallet(wallet);
         userRepository.save(savedUser);
-        log.info("User created with id: {}", savedUser.getId());
+
+        userRepository.flush();
+
         return userMapper.toResponse(savedUser);
     }
 
@@ -66,9 +64,9 @@ public class UserService {
     }
 
     public UserResponse updateUser(UUID id, UpdateUserRequest request) {
-        User user = userRepository.findById(id)
+        var user = userRepository.findById(id)
                 .orElseThrow(() -> new
-                                AppException(ErrorCode.USER_NOT_FOUND)
+                        AppException(ErrorCode.USER_NOT_FOUND)
                 );
         // Email
         var emailRequest = request.getEmail();
@@ -78,26 +76,24 @@ public class UserService {
             }
             user.setEmail(request.getEmail());
         }
-
         // FullName
         var fullNameRequest = request.getFullName();
         if (hasValue(fullNameRequest) && !user.getFullName().equals(fullNameRequest)) {
             user.setFullName(fullNameRequest);
         }
-
         // Phone
         var phoneRequest = request.getPhone();
         if (hasValue(phoneRequest) && !user.getPhone().equals(phoneRequest)) {
             user.setPhone(phoneRequest);
         }
-
         // Password
         var passwordRequest = request.getPassword();
         if (hasValue(passwordRequest)) {
             user.setPassword(passwordEncoder.encode(passwordRequest));
         }
 
-        User updated = userRepository.save(user);
+        user.setUpdatedAt(LocalDateTime.now());
+        var updated = userRepository.save(user);
 
         return userMapper.toResponse(updated);
     }

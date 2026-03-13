@@ -25,45 +25,39 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final WalletService walletService;
     private final UserService userService;
     private final UserMapper userMapper;
     private final JwtUtil jwtUtil;
 
     @Transactional(rollbackOn = Exception.class)
     public AuthResponse register(CreateUserRequest userRequest) {
-        UserResponse userResponse = userService.create(userRequest);
+        var userResponse = userService.create(userRequest);
 
-        User user = userRepository.findById(
-                userResponse.getId()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        var userResponseId = userResponse.getId();
 
-        String accessToken = jwtUtil.generateToken(user.getId(), user.getEmail());
-        String refreshToken = jwtUtil.generateRefreshToken(user.getId(), user.getEmail());
+        var walletResponse = walletService.getWalletForUser(userResponseId);
 
-        log.info("User registered and authenticated: {}", user.getEmail());
+
         return AuthResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .tokenType("Bearer")
-                .expiresIn(3600000L)
-                .user(userResponse)
+                .userResponse(userResponse)
+                .walletResponse(walletResponse)
                 .build();
     }
 
     public AuthResponse login(LoginRequest loginRequest) {
-        String email = loginRequest.getEmail();
-        String password = loginRequest.getPassword();
+        var email = loginRequest.getEmail();
+        var password = loginRequest.getPassword();
 
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        var user = userRepository.findByEmail(email).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         if (!passwordEncoder.matches(password, user.getPassword())) {
             log.info("Invalid password for user: {} ", email);
             throw new AppException(ErrorCode.INVALID_PASSWORD);
         }
 
-        String accessToken = jwtUtil.generateToken(user.getId(), user.getEmail());
-        String refreshToken = jwtUtil.generateRefreshToken(user.getId(), user.getEmail());
+        var accessToken = jwtUtil.generateToken(user.getId(), user.getEmail());
+        var refreshToken = jwtUtil.generateRefreshToken(user.getId(), user.getEmail());
         var userLogin = userMapper.toResponse(user);
-
-        UserResponse freshUserResponse = userMapper.toResponse(user);
 
         log.info("User logged in: {}", user.getEmail());
 
@@ -73,7 +67,7 @@ public class AuthService {
                 .refreshToken(refreshToken)
                 .tokenType("Bearer")
                 .expiresIn(3600000L)
-                .user(userLogin)
+                .userResponse(userLogin)
                 .build();
 
     }
@@ -104,7 +98,7 @@ public class AuthService {
                 .refreshToken(refreshToken)
                 .tokenType("Bearer")
                 .expiresIn(3600000L)
-                .user(userMapper.toResponse(user))
+                .userResponse(userMapper.toResponse(user))
                 .build();
     }
 }

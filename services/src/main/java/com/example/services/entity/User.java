@@ -41,9 +41,9 @@ public class User {
     @Schema(description = "Created timestamp")
     private LocalDateTime createdAt;
 
-    @UpdateTimestamp
     @Column(name = "updated_at")
     @Schema(description = "Updated timestamp")
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
