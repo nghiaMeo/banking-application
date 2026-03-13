@@ -18,10 +18,7 @@ public interface UserMapper {
 
     UserResponse toResponse(User user);
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "wallet", ignore = true)
+
     void updateUserFromRequest(UpdateUserRequest request, @MappingTarget User user);
 
     default User toEntityWithNormalization(CreateUserRequest request) {
