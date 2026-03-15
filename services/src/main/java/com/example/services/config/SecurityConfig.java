@@ -33,7 +33,13 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html"
                         ).permitAll()
-                        .requestMatchers("/api/users/***", "/api/wallet/**").authenticated()
+                        .requestMatchers(
+                                "/api/users/***",
+                                "/api/wallet/**",
+                                "/api/users/{id}",
+                                "/api/users/{id}/profile",
+                                "/api/wallet/"
+                                ).authenticated()
                         .anyRequest().authenticated()
                 ).formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable);
