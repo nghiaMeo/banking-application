@@ -3,6 +3,7 @@ package com.example.services.controller;
 import com.example.services.dto.request.CreateUserRequest;
 import com.example.services.dto.request.UpdateUserRequest;
 import com.example.services.dto.response.APIResponse;
+import com.example.services.dto.response.AuthResponse;
 import com.example.services.dto.response.UserResponse;
 import com.example.services.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,9 +13,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.annotations.Parameter;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,6 +28,33 @@ import java.util.UUID;
 @Tag(name = "User Management", description = "APIs for managing users")
 public class UserController {
     private final UserService userService;
+
+    @GetMapping("/profile")
+    @Operation(summary = "Get current user profile")
+    public APIResponse<UserResponse> getProfile(Authentication authentication) {
+        var userId = authentication.getName();
+        UserResponse userResponse = userService.getUserById(UUID.fromString(userId));
+        return  APIResponse.<UserResponse>builder()
+                .data(userResponse)
+                .build();
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Get user by ID")
+    public APIResponse<UserResponse> getUserById(@PathVariable UUID id, Authentication authentication) {
+        var currentUserId = authentication.getName();
+        if(!currentUserId.equals(id.toString())) {
+            return APIResponse.<UserResponse>builder()
+                    .message(String.valueOf(HttpStatus.FORBIDDEN))
+                    .build();
+        }
+
+        var userId = userService.getUserById(id);
+        return APIResponse.<UserResponse>builder()
+                .data(userId)
+                .build();
+    }
+
 
     @PostMapping
     @Operation(
@@ -74,11 +103,20 @@ public class UserController {
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
-    public UserResponse updateUser(
-            @PathVariable String id,
-            @RequestBody @Valid UpdateUserRequest request) {
-        UserResponse response = userService.updateUser(UUID.fromString(id), request);
-        return userService.updateUser(UUID.fromString(id), request);
+    public APIResponse<UserResponse> updateUser(
+            @PathVariable UUID id,
+            @RequestBody @Valid UpdateUserRequest request, Authentication authentication) {
+        var currentUserId = authentication.getName();
+        if (!currentUserId.equals(id.toString())) {
+            return APIResponse.<UserResponse>builder()
+                    .message(String.valueOf(HttpStatus.FORBIDDEN))
+                    .build();
+        }
+
+        UserResponse response = userService.updateUser(id, request);
+        return APIResponse.<UserResponse>builder()
+                .data(response)
+                .build();
     }
 
 
