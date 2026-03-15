@@ -35,10 +35,13 @@ public class AuthService {
         var userResponse = userService.create(userRequest);
 
         var userResponseId = userResponse.getId();
+        var walletUser = walletService.getWalletForUser(userResponseId);
+
 
 
         return AuthResponse.builder()
                 .userResponse(userResponse)
+                .walletResponse(walletUser)
                 .build();
     }
 
