@@ -56,6 +56,12 @@ public class UserService {
         return userMapper.toResponse(savedUser);
     }
 
+    public UserResponse getUserById(UUID id) {
+        return userMapper.toResponse(userRepository
+                .findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND)));
+    }
+
     public List<UserResponse> allUsers() {
         List<User> users = userRepository.findAll();
         return users.stream()
