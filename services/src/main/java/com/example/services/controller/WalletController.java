@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -117,7 +118,8 @@ public class WalletController {
             @ApiResponse(responseCode = "404", description = "Wallet not found"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public APIResponse<BigDecimal> getBalance(@PathVariable UUID userId) {
+    public APIResponse<BigDecimal> getBalance( Authentication authentication) {
+        UUID userId = UUID.fromString(authentication.getName());
         BigDecimal balance = walletService.getBalance(userId);
         return APIResponse.<BigDecimal>builder()
                 .data(balance)

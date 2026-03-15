@@ -33,6 +33,10 @@ public class WalletService {
         return savedWallet;
     }
 
+    public Wallet getWalletById(UUID id) {
+        return walletRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
+    }
+
     public WalletResponse getWalletForUser(UUID userId) {
         var wallet = walletRepository.findByUserId(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         return walletMapper.toWalletResponse(wallet);
@@ -78,7 +82,9 @@ public class WalletService {
     }
 
     public BigDecimal getBalance(UUID userId) {
-        Wallet wallet = walletRepository.findByUserId(userId).orElseThrow(() -> new AppException(ErrorCode.INVALID_AMOUNT));
+        Wallet wallet = walletRepository
+                .findByUserId(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.INVALID_AMOUNT));
         return wallet.getBalance();
     }
 
