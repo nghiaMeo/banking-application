@@ -1,16 +1,28 @@
 package com.example.services.service;
 
+import com.example.services.dto.request.DepositRequest;
 import com.example.services.dto.request.UpdateWalletRequest;
+import com.example.services.dto.request.WithdrawRequest;
+import com.example.services.dto.response.TransactionResponse;
 import com.example.services.dto.response.WalletResponse;
+import com.example.services.entity.Transaction;
+import com.example.services.entity.TransactionType;
 import com.example.services.entity.User;
 import com.example.services.entity.Wallet;
 import com.example.services.exception.AppException;
 import com.example.services.exception.enums.ErrorCode;
+import com.example.services.mapper.TransactionMapper;
 import com.example.services.mapper.WalletMapper;
+import com.example.services.repository.TransactionRepository;
 import com.example.services.repository.WalletRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -22,6 +34,72 @@ public class WalletService {
 
     private final WalletRepository walletRepository;
     private final WalletMapper walletMapper;
+    private final TransactionMapper transactionMapper;
+    private final TransactionRepository transactionRepository;
+
+    public Page<TransactionResponse> getTransactions(UUID walletId, int page, int size) {
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+        Page<Transaction> transactions = transactionRepository.findByWalletId(walletId, pageable);
+
+        log.info("Retrieved {} transactions for wallet: {}",
+                transactions.getContent().size(), walletId);
+
+        return transactions.map(transactionMapper::toTransactionResponse);
+    }
+
+
+    @Transactional(rollbackFor = Exception.class)
+    public BigDecimal deposit(DepositRequest request, UUID userId) {
+        var wallet = walletRepository.findByUserId(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
+        var newBalance = wallet.getBalance().add(request.getAmount());
+        wallet.setBalance(newBalance);
+        walletRepository.save(wallet);
+
+
+        Transaction transaction = Transaction.builder()
+                .wallet(wallet)
+                .amount(request.getAmount())
+                .type(TransactionType.DEPOSIT)
+                .description("Deposit transaction: " + request.getAmount())
+                .build();
+
+        transactionRepository.save(transaction);
+        log.info("Deposit successful - userId: {}, amount: {}, newBalance: {}",
+                userId, request.getAmount(), newBalance);
+
+        return newBalance;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public BigDecimal withdraw(WithdrawRequest request, UUID userId) {
+        var wallet = walletRepository.findByUserId(userId).orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
+
+        if (wallet.getBalance().compareTo(request.getAmount()) < 0) {
+            throw new AppException(ErrorCode.INSUFFICIENT_BALANCE);
+        }
+
+        BigDecimal newBalance = wallet.getBalance().subtract(request.getAmount());
+        wallet.setBalance(newBalance);
+        walletRepository.save(wallet);
+
+        Transaction transaction = Transaction.builder()
+                .wallet(wallet)
+                .amount(request.getAmount())
+                .type(TransactionType.WITHDRAW)
+                .description("Withdraw transaction: " + request.getAmount())
+                .build();
+
+        transactionRepository.save(transaction);
+        log.info("Withdraw successful - userId: {}, amount: {}, new balance: {}",
+                userId, request.getAmount(), newBalance);
+        return newBalance;
+    }
+
 
     public Wallet createWalletForUser(User user) {
         var wallet = new Wallet();
@@ -53,7 +131,7 @@ public class WalletService {
     }
 
     public WalletResponse addBalance(UUID userId, BigDecimal amount) {
-        var wallet = walletRepository.findByUserId(userId).orElseThrow(() -> new AppException(ErrorCode.USER_ALREADY_EXISTS));
+        var wallet = walletRepository.findByUserId(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new AppException(ErrorCode.INVALID_AMOUNT);

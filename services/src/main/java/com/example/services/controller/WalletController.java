@@ -1,7 +1,10 @@
 package com.example.services.controller;
 
+import com.example.services.dto.request.DepositRequest;
 import com.example.services.dto.request.UpdateWalletRequest;
+import com.example.services.dto.request.WithdrawRequest;
 import com.example.services.dto.response.APIResponse;
+import com.example.services.dto.response.TransactionResponse;
 import com.example.services.dto.response.WalletResponse;
 import com.example.services.service.WalletService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -9,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,10 +29,55 @@ public class WalletController {
 
     private final WalletService walletService;
 
-    /**
-     * Lấy wallet info
-     * GET /api/wallet/{userId}
-     */
+
+    @GetMapping("/transactions")
+    @Operation(summary = "Get transaction history")
+    public APIResponse<Page<TransactionResponse>> getTransactionHistory(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Authentication authentication){
+        UUID userid = UUID.fromString(authentication.getName());
+        var wallet = walletService.getWalletForUser(userid);
+
+        Page<TransactionResponse> transactionResponsePage = walletService.getTransactions(
+                wallet.getId(),
+                page,
+                size
+        );
+        return APIResponse.<Page<TransactionResponse>>builder()
+                .data(transactionResponsePage)
+                .build();
+
+    }
+
+
+    @PostMapping("/withdraw")
+    @Operation(summary = "Withdraw money from wallet")
+    public APIResponse<BigDecimal> withdraw(@Valid @RequestBody WithdrawRequest withdrawRequest,
+                                            Authentication authentication) {
+        UUID userId = UUID.fromString(authentication.getName());
+        BigDecimal newBalance = walletService.withdraw(withdrawRequest, userId);
+
+        return APIResponse.<BigDecimal>builder()
+                .data(newBalance)
+                .build();
+    }
+
+
+    @PostMapping("/deposit")
+    @Operation(summary = "Deposit money to wallet")
+    public APIResponse<BigDecimal> deposit(@Valid @RequestBody DepositRequest depositRequest,
+                                           Authentication authentication) {
+        UUID userId = UUID.fromString(authentication.getName());
+        BigDecimal newBalance = walletService.deposit(depositRequest, userId);
+        return APIResponse.<BigDecimal>builder()
+                .data(newBalance)
+                .build();
+
+    }
+
+
+
     @GetMapping("/{userId}")
     @Operation(summary = "Get wallet", description = "Retrieve wallet information for a specific user")
     @ApiResponses(value = {
@@ -44,8 +93,6 @@ public class WalletController {
     }
 
     /**
-     * Update/Set balance (SET giá trị)
-     * PUT /api/wallet/{userId}
      * Body: {"balance": 10000.00}
      */
     @PutMapping("/{userId}")
@@ -66,7 +113,6 @@ public class WalletController {
     }
 
     /**
-     * Add Balance (Nạp tiền)
      * POST /api/wallet/{userId}/add?amount=100.00
      */
     @PostMapping("/{userId}/add")
@@ -87,7 +133,6 @@ public class WalletController {
     }
 
     /**
-     * Deduct Balance (Rút tiền)
      * POST /api/wallet/{userId}/deduct?amount=50.00
      */
     @PostMapping("/{userId}/deduct")
@@ -108,7 +153,6 @@ public class WalletController {
     }
 
     /**
-     * Lấy số dư
      * GET /api/wallet/{userId}/balance
      */
     @GetMapping("/{userId}/balance")
@@ -118,7 +162,7 @@ public class WalletController {
             @ApiResponse(responseCode = "404", description = "Wallet not found"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public APIResponse<BigDecimal> getBalance( Authentication authentication) {
+    public APIResponse<BigDecimal> getBalance(Authentication authentication) {
         UUID userId = UUID.fromString(authentication.getName());
         BigDecimal balance = walletService.getBalance(userId);
         return APIResponse.<BigDecimal>builder()
