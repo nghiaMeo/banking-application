@@ -3,8 +3,6 @@ package com.example.services.service;
 import com.example.services.dto.request.CreateUserRequest;
 import com.example.services.dto.request.LoginRequest;
 import com.example.services.dto.response.AuthResponse;
-import com.example.services.dto.response.UserResponse;
-import com.example.services.entity.User;
 import com.example.services.exception.AppException;
 import com.example.services.exception.enums.ErrorCode;
 import com.example.services.mapper.UserMapper;
@@ -15,8 +13,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -35,7 +31,7 @@ public class AuthService {
         var userResponse = userService.create(userRequest);
 
         var userResponseId = userResponse.getId();
-        var walletUser = walletService.getWalletForUser(userResponseId);
+        var walletUser = walletService.getWalletByUserIdResponse(userResponseId);
 
 
 
@@ -58,7 +54,7 @@ public class AuthService {
         var accessToken = jwtUtil.generateToken(user.getId(), user.getEmail());
         var refreshToken = jwtUtil.generateRefreshToken(user.getId(), user.getEmail());
         var userLogin = userMapper.toResponse(user);
-        var walletUser = walletService.getWalletForUser(user.getId());
+        var walletUser = walletService.getWalletByUserIdResponse(user.getId());
 
         log.info("User logged in: {}", user.getEmail());
 

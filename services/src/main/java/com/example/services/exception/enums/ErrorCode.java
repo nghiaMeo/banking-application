@@ -34,6 +34,7 @@ public enum ErrorCode {
     INVALID_KEY(1012, "Invalid Key", HttpStatus.BAD_REQUEST),
     INVALID_AMOUNT(1013, "Invalid Amount", HttpStatus.BAD_REQUEST),
     AMOUNT_IS_ZERO(1014, "Amount is zero", HttpStatus.BAD_REQUEST),
+    FORBIDDEN(1016, "Forbidden - Access denied", HttpStatus.FORBIDDEN),  // ← Add this
     INSUFFICIENT_BALANCE(1015, "Insufficient Balance", HttpStatus.BAD_REQUEST),
     BAD_REQUEST(9000, "User Not Found", HttpStatus.BAD_REQUEST),
 
