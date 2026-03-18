@@ -8,11 +8,11 @@ import com.example.services.exception.enums.ErrorCode;
 import com.example.services.mapper.UserMapper;
 import com.example.services.repository.UserRepository;
 import com.example.services.util.JwtUtil;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -26,14 +26,12 @@ public class AuthService {
     private final UserMapper userMapper;
     private final JwtUtil jwtUtil;
 
-    @Transactional(rollbackOn = Exception.class)
+    @Transactional(rollbackFor = Exception.class)
     public AuthResponse register(CreateUserRequest userRequest) {
         var userResponse = userService.create(userRequest);
 
         var userResponseId = userResponse.getId();
         var walletUser = walletService.getWalletByUserIdResponse(userResponseId);
-
-
 
         return AuthResponse.builder()
                 .userResponse(userResponse)
@@ -41,11 +39,15 @@ public class AuthService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
     public AuthResponse login(LoginRequest loginRequest) {
-        var email = loginRequest.getEmail();
+        var email = loginRequest.getEmail().trim().toLowerCase();
         var password = loginRequest.getPassword();
 
-        var user = userRepository.findByEmail(email).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        var user = userRepository
+                .findByEmailIgnoreCaseWithWallet(email)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
         if (!passwordEncoder.matches(password, user.getPassword())) {
             log.info("Invalid password for user: {} ", email);
             throw new AppException(ErrorCode.INVALID_PASSWORD);
@@ -70,6 +72,7 @@ public class AuthService {
 
     }
 
+    @Transactional(readOnly = true)
     public AuthResponse refreshAccessToken(String refreshToken) {
         if (!jwtUtil.validateToken(refreshToken)) {
             throw new AppException(ErrorCode.BAD_REQUEST);
