@@ -54,8 +54,8 @@ public class WalletService {
 
     @Transactional(rollbackFor = Exception.class)
     public BigDecimal deposit(DepositRequest request, UUID userId) {
-        var wallet = walletRepository.findByUserId(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
+        var wallet = getWalletByUserId(userId);
+        verifyWalletOwnership(userId,wallet.getId());
         var newBalance = wallet.getBalance().add(request.getAmount());
         wallet.setBalance(newBalance);
         walletRepository.save(wallet);
@@ -77,7 +77,9 @@ public class WalletService {
 
     @Transactional(rollbackFor = Exception.class)
     public BigDecimal withdraw(WithdrawRequest request, UUID userId) {
-        var wallet = walletRepository.findByUserId(userId).orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
+        var wallet = getWalletByUserId(userId);
+
+        verifyWalletOwnership(userId,wallet.getId());
 
         if (wallet.getBalance().compareTo(request.getAmount()) < 0) {
             throw new AppException(ErrorCode.INSUFFICIENT_BALANCE);
@@ -111,14 +113,6 @@ public class WalletService {
         return savedWallet;
     }
 
-    public Wallet getWalletById(UUID id) {
-        return walletRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
-    }
-
-    public WalletResponse getWalletForUser(UUID userId) {
-        var wallet = walletRepository.findByUserId(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-        return walletMapper.toWalletResponse(wallet);
-    }
 
     public WalletResponse updateWallet(UUID userId, UpdateWalletRequest updateWalletRequest) {
         var wallet = walletRepository.findByUserId(userId).orElseThrow(() -> new AppException(ErrorCode.USER_ALREADY_EXISTS));
@@ -131,7 +125,9 @@ public class WalletService {
     }
 
     public WalletResponse addBalance(UUID userId, BigDecimal amount) {
-        var wallet = walletRepository.findByUserId(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        var wallet = getWalletByUserId(userId);
+        verifyWalletOwnership(userId,wallet.getId());
+
 
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new AppException(ErrorCode.INVALID_AMOUNT);
@@ -144,7 +140,8 @@ public class WalletService {
     }
 
     public WalletResponse deductBalance(UUID userId, BigDecimal amount) {
-        var wallet = walletRepository.findByUserId(userId).orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
+        var wallet = getWalletByUserId(userId);
+        verifyWalletOwnership(userId, wallet.getId());
 
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new AppException(ErrorCode.INVALID_AMOUNT);
@@ -160,11 +157,28 @@ public class WalletService {
     }
 
     public BigDecimal getBalance(UUID userId) {
-        Wallet wallet = walletRepository
-                .findByUserId(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.INVALID_AMOUNT));
+        Wallet wallet = getWalletByUserId(userId);
+        verifyWalletOwnership(userId, wallet.getId());
         return wallet.getBalance();
     }
 
+    public WalletResponse getWalletByUserIdResponse(UUID userId) {
+        var wallet = walletRepository.findByUserId(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        return walletMapper.toWalletResponse(wallet);
+    }
+
+    public Wallet getWalletByUserId(UUID userId) {
+        return walletRepository.findByUserId(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    private void verifyWalletOwnership(UUID userId, UUID walletId) {
+        var wallet = walletRepository.findById(walletId).orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
+
+        if (!wallet.getUser().getId().equals(userId)) {
+            log.warn("User {} attempted to access wallet {} of user {}",
+                    userId, walletId, wallet.getUser().getId());
+            throw new AppException(ErrorCode.FORBIDDEN);
+        }
+    }
 
 }

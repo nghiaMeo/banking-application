@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +26,7 @@ import java.util.UUID;
 @RequestMapping("/api/wallet")
 @RequiredArgsConstructor
 @Tag(name = "Wallet Management", description = "APIs for managing user wallets")
+@Slf4j
 public class WalletController {
 
     private final WalletService walletService;
@@ -37,7 +39,7 @@ public class WalletController {
             @RequestParam(defaultValue = "10") int size,
             Authentication authentication){
         UUID userid = UUID.fromString(authentication.getName());
-        var wallet = walletService.getWalletForUser(userid);
+        var wallet = walletService.getWalletByUserId(userid);
 
         Page<TransactionResponse> transactionResponsePage = walletService.getTransactions(
                 wallet.getId(),
@@ -56,6 +58,9 @@ public class WalletController {
     public APIResponse<BigDecimal> withdraw(@Valid @RequestBody WithdrawRequest withdrawRequest,
                                             Authentication authentication) {
         UUID userId = UUID.fromString(authentication.getName());
+
+        var wallet = walletService.getWalletByUserId(userId);
+
         BigDecimal newBalance = walletService.withdraw(withdrawRequest, userId);
 
         return APIResponse.<BigDecimal>builder()
@@ -86,7 +91,7 @@ public class WalletController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public APIResponse<WalletResponse> getWallet(@PathVariable UUID userId) {
-        WalletResponse response = walletService.getWalletForUser(userId);
+        WalletResponse response = walletService.getWalletByUserIdResponse(userId);
         return APIResponse.<WalletResponse>builder()
                 .data(response)
                 .build();
@@ -169,4 +174,5 @@ public class WalletController {
                 .data(balance)
                 .build();
     }
+
 }

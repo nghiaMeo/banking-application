@@ -46,7 +46,7 @@ public class User {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Wallet wallet;
 
 
