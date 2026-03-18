@@ -35,3 +35,7 @@ logging:
     root: INFO
     org:
       springdoc: DEBUG
+      hibernate:
+        sql: DEBUG
+        type.descriptor.sql.BasicBinder: TRACE
+    com.example.services: DEBUG
