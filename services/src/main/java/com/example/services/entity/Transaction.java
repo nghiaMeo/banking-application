@@ -35,8 +35,8 @@ public class Transaction {
     @JoinColumn(name = "related_wallet_id")
     private Wallet relatedWallet;
 
-    @Column(name = "ground_id", length = 36)
-    private String groundId;
+    @Column(name = "group_id", length = 36)
+    private String groupId;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
