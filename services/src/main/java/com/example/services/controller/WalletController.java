@@ -1,11 +1,11 @@
 package com.example.services.controller;
 
 import com.example.services.dto.request.DepositRequest;
-import com.example.services.dto.request.UpdateWalletRequest;
+import com.example.services.dto.request.TransferRequest;
 import com.example.services.dto.request.WithdrawRequest;
 import com.example.services.dto.response.APIResponse;
 import com.example.services.dto.response.TransactionResponse;
-import com.example.services.dto.response.WalletResponse;
+import com.example.services.service.TransactionService;
 import com.example.services.service.WalletService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -30,148 +30,118 @@ import java.util.UUID;
 public class WalletController {
 
     private final WalletService walletService;
+    private final TransactionService transactionService;
 
 
-    @GetMapping("/transactions")
-    @Operation(summary = "Get transaction history")
-    public APIResponse<Page<TransactionResponse>> getTransactionHistory(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            Authentication authentication){
-        UUID userid = UUID.fromString(authentication.getName());
-        var wallet = walletService.getWalletByUserId(userid);
-
-        Page<TransactionResponse> transactionResponsePage = walletService.getTransactions(
-                wallet.getId(),
-                page,
-                size
-        );
-        return APIResponse.<Page<TransactionResponse>>builder()
-                .data(transactionResponsePage)
+    @GetMapping("/balance")
+    @Operation(summary = "Get wallet balance")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "404", description = "Wallet not found"),
+            @ApiResponse(responseCode = "403", description = "Forbidden"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized")
+    })
+    public APIResponse<BigDecimal> getBalance(Authentication authentication) {
+        var userId = UUID.fromString(authentication.getName());
+        var balance = walletService.getBalance(userId);
+        return APIResponse.<BigDecimal>builder()
+                .data(balance)
                 .build();
+    }
 
+    @PostMapping("/deposit")
+    @Operation(summary = "Deposit money", description = "Add money to wallet")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Deposit successful"),
+            @ApiResponse(responseCode = "400", description = "Invalid input"),
+            @ApiResponse(responseCode = "403", description = "Forbidden"),
+            @ApiResponse(responseCode = "404", description = "Wallet not found"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized")
+    })
+    public APIResponse<BigDecimal> deposit(
+            @Valid @RequestBody DepositRequest request,
+            Authentication authentication) {
+
+        var userId = authentication.getName();
+        var newBalance = walletService.deposit(request, UUID.fromString(userId));
+
+        return APIResponse.<BigDecimal>builder()
+                .data(newBalance)
+                .message("Deposit successful")
+                .build();
     }
 
 
     @PostMapping("/withdraw")
-    @Operation(summary = "Withdraw money from wallet")
-    public APIResponse<BigDecimal> withdraw(@Valid @RequestBody WithdrawRequest withdrawRequest,
-                                            Authentication authentication) {
-        UUID userId = UUID.fromString(authentication.getName());
+    @Operation(summary = "Withdraw money", description = "Withdraw money from wallet")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Withdraw successful"),
+            @ApiResponse(responseCode = "400", description = "Invalid input or insufficient balance"),
+            @ApiResponse(responseCode = "403", description = "Forbidden"),
+            @ApiResponse(responseCode = "404", description = "Wallet not found"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized")
+    })
+    public APIResponse<BigDecimal> withdraw(
+            @Valid @RequestBody WithdrawRequest request,
+            Authentication authentication) {
 
-        var wallet = walletService.getWalletByUserId(userId);
-
-        BigDecimal newBalance = walletService.withdraw(withdrawRequest, userId);
-
+        var userId = UUID.fromString(authentication.getName());
+        var newBalance = walletService.withdraw( request, userId);
         return APIResponse.<BigDecimal>builder()
                 .data(newBalance)
+                .message("Withdraw successful")
                 .build();
     }
 
 
-    @PostMapping("/deposit")
-    @Operation(summary = "Deposit money to wallet")
-    public APIResponse<BigDecimal> deposit(@Valid @RequestBody DepositRequest depositRequest,
-                                           Authentication authentication) {
-        UUID userId = UUID.fromString(authentication.getName());
-        BigDecimal newBalance = walletService.deposit(depositRequest, userId);
-        return APIResponse.<BigDecimal>builder()
-                .data(newBalance)
-                .build();
-
-    }
-
-
-
-    @GetMapping("/{userId}")
-    @Operation(summary = "Get wallet", description = "Retrieve wallet information for a specific user")
+    @PostMapping("/transfer")
+    @Operation(summary = "Transfer money", description = "Transfer money to another user")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Wallet found"),
+            @ApiResponse(responseCode = "200", description = "Transfer successful"),
+            @ApiResponse(responseCode = "400", description = "Invalid input or insufficient balance"),
+            @ApiResponse(responseCode = "403", description = "Forbidden"),
             @ApiResponse(responseCode = "404", description = "Wallet not found"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
-    public APIResponse<WalletResponse> getWallet(@PathVariable UUID userId) {
-        WalletResponse response = walletService.getWalletByUserIdResponse(userId);
-        return APIResponse.<WalletResponse>builder()
-                .data(response)
+    public APIResponse<String> transfer(
+            @Valid @RequestBody TransferRequest request,
+            Authentication authentication) {
+
+        var senderId = UUID.fromString(authentication.getName());
+        transactionService.transfer(senderId, request);
+
+        return APIResponse.<String>builder()
+                .message("transfer Successfully")
                 .build();
     }
 
-    /**
-     * Body: {"balance": 10000.00}
-     */
-    @PutMapping("/{userId}")
-    @Operation(summary = "Update wallet balance", description = "Set wallet balance to a specific amount")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Wallet update successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid input"),
-            @ApiResponse(responseCode = "404", description = "Wallet not found"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
-    })
-    public APIResponse<WalletResponse> updateWallet(
-            @PathVariable UUID userId,
-            @RequestBody @Valid UpdateWalletRequest request) {
-        WalletResponse response = walletService.updateWallet(userId, request);
-        return APIResponse.<WalletResponse>builder()
-                .data(response)
-                .build();
-    }
 
-    /**
-     * POST /api/wallet/{userId}/add?amount=100.00
-     */
-    @PostMapping("/{userId}/add")
-    @Operation(summary = "Add balance", description = "Add money to wallet(deposit)")
+    @GetMapping("/transactions")
+    @Operation(summary = "Get transaction history")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Balance added successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid input"),
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "403", description = "Forbidden"),
             @ApiResponse(responseCode = "404", description = "Wallet not found"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
-    public APIResponse<WalletResponse> addBalance(
-            @PathVariable UUID userId,
-            @RequestParam BigDecimal amount) {
-        WalletResponse response = walletService.addBalance(userId, amount);
-        return APIResponse.<WalletResponse>builder()
-                .data(response)
-                .build();
-    }
+    public APIResponse<Page<TransactionResponse>>
 
-    /**
-     * POST /api/wallet/{userId}/deduct?amount=50.00
-     */
-    @PostMapping("/{userId}/deduct")
-    @Operation(summary = "Deduct balance", description = "Deduct money from wallet (withdrawal)")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Balance deduct successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid amount or insufficient balance"),
-            @ApiResponse(responseCode = "404", description = "Wallet not found"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
-    })
-    public APIResponse<WalletResponse> deductBalance(
-            @PathVariable UUID userId,
-            @RequestParam BigDecimal amount) {
-        WalletResponse response = walletService.deductBalance(userId, amount);
-        return APIResponse.<WalletResponse>builder()
-                .data(response)
-                .build();
-    }
+    getTransactions(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Authentication authentication) {
 
-    /**
-     * GET /api/wallet/{userId}/balance
-     */
-    @GetMapping("/{userId}/balance")
-    @Operation(summary = "Get balance", description = "Get current wallet balance")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Balance retrieve successfully"),
-            @ApiResponse(responseCode = "404", description = "Wallet not found"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
-    })
-    public APIResponse<BigDecimal> getBalance(Authentication authentication) {
-        UUID userId = UUID.fromString(authentication.getName());
-        BigDecimal balance = walletService.getBalance(userId);
-        return APIResponse.<BigDecimal>builder()
-                .data(balance)
+        var userId = UUID.fromString(authentication.getName());
+        var currentUserWallet = walletService.getWalletByUserId(userId);
+
+        Page<TransactionResponse> transactions = walletService.getTransactions(
+                currentUserWallet.getId(),
+                page,
+                size
+        );
+
+        return APIResponse.<Page<TransactionResponse>>builder()
+                .data(transactions)
                 .build();
     }
 

@@ -20,7 +20,7 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "wallet_id", nullable = false)
     private Wallet wallet;
 
@@ -30,6 +30,13 @@ public class Transaction {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TransactionType type;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "related_wallet_id")
+    private Wallet relatedWallet;
+
+    @Column(name = "ground_id", length = 36)
+    private String groundId;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
