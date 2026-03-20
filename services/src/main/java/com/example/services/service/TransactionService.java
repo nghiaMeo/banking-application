@@ -3,7 +3,6 @@ package com.example.services.service;
 import com.example.services.dto.request.TransferRequest;
 import com.example.services.entity.Transaction;
 import com.example.services.entity.TransactionType;
-import com.example.services.entity.Wallet;
 import com.example.services.exception.AppException;
 import com.example.services.exception.enums.ErrorCode;
 import com.example.services.repository.TransactionRepository;
@@ -13,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.util.UUID;
 
 @Service
@@ -37,7 +35,7 @@ public class TransactionService {
         }
 
         // S2: Get sender wallet directly by senderId
-        Wallet senderWallet = walletRepository.findByUserIdForUpdate(senderId)
+        var senderWallet = walletRepository.findByUserIdForUpdate(senderId)
                 .orElseThrow(() -> new AppException(
                         ErrorCode.WALLET_NOT_FOUND
                 ));
@@ -46,7 +44,7 @@ public class TransactionService {
                 senderId, senderWallet.getBalance());
 
         // S3: Get receiver wallet directly by receiverId
-        Wallet receiverWallet = walletRepository.findByUserIdForUpdate(transferRequest.getReceiverId())
+        var receiverWallet = walletRepository.findByUserIdForUpdate(transferRequest.getReceiverId())
                 .orElseThrow(() -> new AppException(
                         ErrorCode.WALLET_NOT_FOUND
                 ));
@@ -64,8 +62,8 @@ public class TransactionService {
         }
 
         // S5: Calculate new balances
-        BigDecimal senderNewBalance = senderWallet.getBalance().subtract(transferRequest.getAmount());
-        BigDecimal receiverNewBalance = receiverWallet.getBalance().add(transferRequest.getAmount());
+        var senderNewBalance = senderWallet.getBalance().subtract(transferRequest.getAmount());
+        var receiverNewBalance = receiverWallet.getBalance().add(transferRequest.getAmount());
 
         log.debug("Calculated balances - sender: {} -> {}, receiver: {} -> {}",
                 senderWallet.getBalance(), senderNewBalance,
@@ -86,10 +84,10 @@ public class TransactionService {
                 transferRequest.getReceiverId(), transferRequest.getAmount(), receiverNewBalance);
 
         // S8: Generate group ID
-        String groupId = UUID.randomUUID().toString();
+        var groupId = UUID.randomUUID().toString();
 
         // S9: Save sender transaction (TRANSFER OUT)
-        Transaction senderTransaction = Transaction.builder()
+        var senderTransaction = Transaction.builder()
                 .wallet(senderWallet)
                 .type(TransactionType.TRANSFER)
                 .amount(transferRequest.getAmount())
@@ -99,10 +97,8 @@ public class TransactionService {
                 .build();
         transactionRepository.save(senderTransaction);
 
-
-
         // ✅ S10: Save receiver transaction (TRANSFER IN)
-        Transaction receiverTransaction = Transaction.builder()
+        var receiverTransaction = Transaction.builder()
                 .wallet(receiverWallet)
                 .type(TransactionType.TRANSFER)
                 .amount(transferRequest.getAmount())
@@ -111,8 +107,6 @@ public class TransactionService {
                 .groupId(groupId)
                 .build();
         transactionRepository.save(receiverTransaction);
-
-
 
         log.info("Transfer completed successfully - groupId: {}, from: {}, to: {}, amount: {}",
                 groupId, senderId, transferRequest.getReceiverId(), transferRequest.getAmount());
