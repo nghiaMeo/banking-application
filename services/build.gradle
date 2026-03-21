@@ -18,6 +18,7 @@ configurations {
 	compileOnly {
 		extendsFrom annotationProcessor
 	}
+	mockitoAgent
 }
 
 repositories {
@@ -43,10 +44,14 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	mockitoAgent('org.mockito:mockito-core:5.20.0') {
+		transitive = false
+	}
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
+	jvmArgs.add("-javaagent:${configurations.mockitoAgent.asPath}")
 	testLogging {
 		events "passed", "skipped", "failed"
 		exceptionFormat "full"

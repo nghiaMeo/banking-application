@@ -1,10 +1,12 @@
-package com.example.services;
+package com.example.services.transaction;
 
 import com.example.services.dto.request.TransferRequest;
 import com.example.services.entity.Transaction;
 import com.example.services.entity.TransactionType;
 import com.example.services.entity.User;
 import com.example.services.entity.Wallet;
+import com.example.services.exception.AppException;
+import com.example.services.exception.enums.ErrorCode;
 import com.example.services.repository.TransactionRepository;
 import com.example.services.repository.UserRepository;
 import com.example.services.repository.WalletRepository;
@@ -95,7 +97,7 @@ public class TransactionServiceTest {
     @DisplayName("Transfer - Success (1000 - 100 = 900, 500 + 100 = 600)")
     void testTransferSuccess() {
         // Arrange
-        TransferRequest transferRequest = TransferRequest.builder()
+        var transferRequest = TransferRequest.builder()
                 .receiverId(userReceiver.getId())
                 .amount(new BigDecimal("100.00"))
                 .description("Payment")
@@ -105,17 +107,17 @@ public class TransactionServiceTest {
         transactionService.transfer(userSender.getId(), transferRequest);
 
         // Assert - Sender balance
-        Wallet updatedWalletSender = walletRepository.findById(walletSender.getId()).orElseThrow();
+        var updatedWalletSender = walletRepository.findById(walletSender.getId()).orElseThrow();
         assertEquals(new BigDecimal("900.00"), updatedWalletSender.getBalance(),
                 "Sender balance should be 900 (1000 - 100)");
 
         // Assert - Receiver balance
-        Wallet updatedWalletReceiver = walletRepository.findById(walletReceiver.getId()).orElseThrow();
+        var updatedWalletReceiver = walletRepository.findById(walletReceiver.getId()).orElseThrow();
         assertEquals(new BigDecimal("600.00"), updatedWalletReceiver.getBalance(),
                 "Receiver balance should be 600 (500 + 100)");
 
         // Assert - Transaction count
-        List<Transaction> transactions = transactionRepository.findAll().stream()
+        var transactions = transactionRepository.findAll().stream()
                 .filter(t -> t.getWallet().getId().equals(walletSender.getId())
                         || t.getWallet().getId().equals(walletReceiver.getId()))
                 .toList();
@@ -123,7 +125,7 @@ public class TransactionServiceTest {
                 "Should have 2 transaction records (OUT + IN)");
 
         // Assert - Same groupId
-        String groupId = transactions.getFirst().getGroupId();
+        var groupId = transactions.getFirst().getGroupId();
         assertTrue(transactions.stream().allMatch(t -> t.getGroupId().equals(groupId)),
                 "Both transactions should have same groupId");
 
@@ -144,17 +146,19 @@ public class TransactionServiceTest {
         BigDecimal originalSenderBalance = walletSender.getBalance();
         BigDecimal originalReceiverBalance = walletReceiver.getBalance();
 
-        TransferRequest request = TransferRequest.builder()
+        var request = TransferRequest.builder()
                 .receiverId(userReceiver.getId())
                 .amount(new BigDecimal("2000.00"))  // More than balance (1000)
                 .build();
 
-        // Act - service logs AppException internally and does not rethrow
-        assertDoesNotThrow(() -> transactionService.transfer(userSender.getId(), request));
+        // Act
+        var exception = assertThrows(AppException.class,
+                () -> transactionService.transfer(userSender.getId(), request));
+        assertEquals(ErrorCode.INSUFFICIENT_BALANCE, exception.getErrorCode());
 
         // Assert - Verify rollback (balances unchanged)
-        Wallet rolledSender = walletRepository.findById(walletSender.getId()).orElseThrow();
-        Wallet rolledReceiver = walletRepository.findById(walletReceiver.getId()).orElseThrow();
+        var rolledSender = walletRepository.findById(walletSender.getId()).orElseThrow();
+        var rolledReceiver = walletRepository.findById(walletReceiver.getId()).orElseThrow();
 
         assertEquals(originalSenderBalance, rolledSender.getBalance(),
                 "Sender balance should be rolled back to original");
@@ -173,16 +177,18 @@ public class TransactionServiceTest {
     @DisplayName("Transfer - Self Transfer (Error)")
     void testTransferSelfTransferError() {
         // Arrange
-        TransferRequest request = TransferRequest.builder()
+        var request = TransferRequest.builder()
                 .receiverId(userSender.getId())  // ← Same as sender!
                 .amount(new BigDecimal("100.00"))
                 .build();
 
-        // Act - service logs AppException internally and does not rethrow
-        assertDoesNotThrow(() -> transactionService.transfer(userSender.getId(), request));
+        // Act
+        var exception = assertThrows(AppException.class,
+                () -> transactionService.transfer(userSender.getId(), request));
+        assertEquals(ErrorCode.BAD_REQUEST, exception.getErrorCode());
 
         // Assert - Balance unchanged
-        Wallet unchangedWallet = walletRepository.findById(walletSender.getId()).orElseThrow();
+        var unchangedWallet = walletRepository.findById(walletSender.getId()).orElseThrow();
         assertEquals(new BigDecimal("1000.00"), unchangedWallet.getBalance(),
                 "Balance should be unchanged");
 
@@ -198,17 +204,19 @@ public class TransactionServiceTest {
     @DisplayName("Transfer - Receiver Not Found")
     void testTransferReceiverNotFound() {
         // Arrange
-        UUID nonExistentId = UUID.randomUUID();
-        TransferRequest request = TransferRequest.builder()
+        var nonExistentId = UUID.randomUUID();
+        var request = TransferRequest.builder()
                 .receiverId(nonExistentId)
                 .amount(new BigDecimal("100.00"))
                 .build();
 
-        // Act - service logs AppException internally and does not rethrow
-        assertDoesNotThrow(() -> transactionService.transfer(userSender.getId(), request));
+        // Act
+        var exception = assertThrows(AppException.class,
+                () -> transactionService.transfer(userSender.getId(), request));
+        assertEquals(ErrorCode.WALLET_NOT_FOUND, exception.getErrorCode());
 
         // Assert - Sender balance unchanged (rollback)
-        Wallet unchangedWallet = walletRepository.findById(walletSender.getId()).orElseThrow();
+        var unchangedWallet = walletRepository.findById(walletSender.getId()).orElseThrow();
         assertEquals(new BigDecimal("1000.00"), unchangedWallet.getBalance());
 
         // Assert - No transactions
@@ -222,17 +230,19 @@ public class TransactionServiceTest {
     @DisplayName("Transfer - Sender Not Found")
     void testTransferSenderNotFound() {
         // Arrange
-        UUID nonExistentSenderId = UUID.randomUUID();
-        TransferRequest request = TransferRequest.builder()
+        var nonExistentSenderId = UUID.randomUUID();
+        var request = TransferRequest.builder()
                 .receiverId(userReceiver.getId())
                 .amount(new BigDecimal("100.00"))
                 .build();
 
-        // Act - service logs AppException internally and does not rethrow
-        assertDoesNotThrow(() -> transactionService.transfer(nonExistentSenderId, request));
+        // Act
+        var exception = assertThrows(AppException.class,
+                () -> transactionService.transfer(nonExistentSenderId, request));
+        assertEquals(ErrorCode.WALLET_NOT_FOUND, exception.getErrorCode());
 
         // Assert - Receiver balance unchanged
-        Wallet unchangedWallet = walletRepository.findById(walletReceiver.getId()).orElseThrow();
+        var unchangedWallet = walletRepository.findById(walletReceiver.getId()).orElseThrow();
         assertEquals(new BigDecimal("500.00"), unchangedWallet.getBalance());
 
         // Assert - No transactions
@@ -246,7 +256,7 @@ public class TransactionServiceTest {
     @DisplayName("Transfer - Multiple Transfers (Sequential)")
     void testTransferMultipleTransfers() {
         // Transfer 1: User sends 100
-        TransferRequest request1 = TransferRequest.builder()
+        var request1 = TransferRequest.builder()
                 .receiverId(userReceiver.getId())
                 .amount(new BigDecimal("100.00"))
                 .build();
@@ -254,13 +264,13 @@ public class TransactionServiceTest {
         transactionService.transfer(userSender.getId(), request1);
 
         // Verify after first transfer
-        Wallet w1 = walletRepository.findById(walletSender.getId()).orElseThrow();
-        Wallet w2 = walletRepository.findById(walletReceiver.getId()).orElseThrow();
+        var w1 = walletRepository.findById(walletSender.getId()).orElseThrow();
+        var w2 = walletRepository.findById(walletReceiver.getId()).orElseThrow();
         assertEquals(new BigDecimal("900.00"), w1.getBalance());
         assertEquals(new BigDecimal("600.00"), w2.getBalance());
 
         // Transfer 2: User sends 50
-        TransferRequest request2 = TransferRequest.builder()
+        var request2 = TransferRequest.builder()
                 .receiverId(userReceiver.getId())
                 .amount(new BigDecimal("50.00"))
                 .build();
@@ -287,7 +297,7 @@ public class TransactionServiceTest {
     @DisplayName("Transfer - Transaction Records (Integrity Check)")
     void testTransferIntegrityCheck() {
         // Arrange
-        TransferRequest request = TransferRequest.builder()
+        var request = TransferRequest.builder()
                 .receiverId(userReceiver.getId())
                 .amount(new BigDecimal("100.00"))
                 .description("Test Payment")
@@ -297,19 +307,19 @@ public class TransactionServiceTest {
         transactionService.transfer(userSender.getId(), request);
 
         // Assert - Get transactions
-        List<Transaction> transactions = transactionRepository.findAll().stream()
+        var transactions = transactionRepository.findAll().stream()
                 .filter(t -> t.getWallet().getId().equals(walletSender.getId())
                         || t.getWallet().getId().equals(walletReceiver.getId()))
                 .toList();
         assertEquals(2, transactions.size(), "There should be two transactions");
 
         // Find sender and receiver transactions
-        Transaction senderTx = transactions.stream()
+        var senderTx = transactions.stream()
                 .filter(t -> t.getWallet().getId().equals(walletSender.getId()))
                 .findFirst()
                 .orElseThrow();
 
-        Transaction receiverTx = transactions.stream()
+        var receiverTx = transactions.stream()
                 .filter(t -> t.getWallet().getId().equals(walletReceiver.getId()))
                 .findFirst()
                 .orElseThrow();
@@ -344,7 +354,7 @@ public class TransactionServiceTest {
     @DisplayName("Transfer - Zero Amount (No change)")
     void testTransferZeroAmount() {
         // Arrange
-        TransferRequest request = TransferRequest.builder()
+        var request = TransferRequest.builder()
                 .receiverId(userReceiver.getId())
                 .amount(new BigDecimal("0.00"))
                 .build();
@@ -353,8 +363,8 @@ public class TransactionServiceTest {
         transactionService.transfer(userSender.getId(), request);
 
         // Assert - Balances unchanged
-        Wallet w1 = walletRepository.findById(walletSender.getId()).orElseThrow();
-        Wallet w2 = walletRepository.findById(walletReceiver.getId()).orElseThrow();
+        var w1 = walletRepository.findById(walletSender.getId()).orElseThrow();
+        var w2 = walletRepository.findById(walletReceiver.getId()).orElseThrow();
 
         assertEquals(new BigDecimal("1000.00"), w1.getBalance(),
                 "Sender balance should be unchanged");

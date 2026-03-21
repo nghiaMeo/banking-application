@@ -116,6 +116,7 @@ public class TransactionService {
         } catch (AppException e) {
             log.error("Transfer failed with AppException - from: {}, to: {}, error: {}",
                     senderId, transferRequest.getReceiverId(), e.getMessage());
+            throw e;
         } catch (Exception e) {
             log.error("Transfer failed with unexpected error - from: {}, to: {}, error: {}",
                     senderId, transferRequest.getReceiverId(), e.getMessage(), e);

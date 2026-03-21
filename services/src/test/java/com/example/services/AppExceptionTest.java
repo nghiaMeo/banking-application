@@ -10,7 +10,7 @@ class AppExceptionTest {
 
     @Test
     void testAppException_WithErrorCodeOnly() {
-        AppException exception = new AppException(ErrorCode.WALLET_NOT_FOUND);
+        var exception = new AppException(ErrorCode.WALLET_NOT_FOUND);
 
         assertEquals(ErrorCode.WALLET_NOT_FOUND, exception.getErrorCode());
         assertEquals("Wallet not found", exception.getMessage());
@@ -18,7 +18,7 @@ class AppExceptionTest {
 
     @Test
     void testAppException_WithCustomMessage() {
-        AppException exception = new AppException(
+        var exception = new AppException(
                 ErrorCode.INSUFFICIENT_BALANCE
         );
 
@@ -28,7 +28,7 @@ class AppExceptionTest {
 
     @Test
     void testAppException_CanBeThrown() {
-        AppException exception = assertThrows(AppException.class, () -> {
+        var exception = assertThrows(AppException.class, () -> {
             throw new AppException(ErrorCode.BAD_REQUEST);
         });
 

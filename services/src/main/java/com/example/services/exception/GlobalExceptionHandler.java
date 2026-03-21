@@ -21,9 +21,9 @@ public class GlobalExceptionHandler {
     private static final String MIN_ATTRIBUTE = "min";
 
     /**
-     * ✅ Xử lý AppException (chính xác)
+     * Xử lý AppException
      */
-    @ExceptionHandler(value = AppException.class)  // ← Type phải match
+    @ExceptionHandler(value = AppException.class)
     public ResponseEntity<APIResponse> handleAppException(AppException e) {
         ErrorCode errorCode = e.getErrorCode();
         APIResponse apiResponse = new APIResponse();
@@ -79,7 +79,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * ✅ Xử lý Exception chung (CUỐI CÙNG)
+     * Xử lý Exception chung (CUỐI CÙNG)
      */
     @ExceptionHandler(value = Exception.class)
     public ResponseEntity<APIResponse> handleGeneral(Exception e) {
