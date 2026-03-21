@@ -25,5 +25,8 @@ public class TransferRequest {
     @Schema(description = "Transfer description/note")
     private String description;
 
+    @Schema(description = "Idempotency key (for preventing duplicates)")
+    private String idempotencyKey;
+
 
 }
