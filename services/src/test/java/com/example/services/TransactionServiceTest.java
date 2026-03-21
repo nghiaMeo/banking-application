@@ -68,7 +68,7 @@ public class TransactionServiceTest {
         // Create sender wallet with 1000 balance
         walletSender = Wallet.builder()
                 .user(userSender)
-                .balance(new BigDecimal("1000.00"))  // ✅ Fixed: Match test expectations
+                .balance(new BigDecimal("1000.00"))
                 .build();
         walletSender = walletRepository.save(walletSender);
         userSender.setWallet(walletSender);
@@ -77,7 +77,7 @@ public class TransactionServiceTest {
         // Create receiver wallet with 500 balance
         walletReceiver = Wallet.builder()
                 .user(userReceiver)
-                .balance(new BigDecimal("500.00"))  // ✅ Fixed: Match test expectations
+                .balance(new BigDecimal("500.00"))
                 .build();
         walletReceiver = walletRepository.save(walletReceiver);
         userReceiver.setWallet(walletReceiver);
@@ -87,7 +87,7 @@ public class TransactionServiceTest {
     }
 
     /**
-     * ✅ TEST 1: Successful transfer
+     * TEST 1: Successful transfer
      * Sender: 1000 - 100 = 900
      * Receiver: 500 + 100 = 600
      */
@@ -96,13 +96,13 @@ public class TransactionServiceTest {
     void testTransferSuccess() {
         // Arrange
         TransferRequest transferRequest = TransferRequest.builder()
-                .receiverId(userReceiver.getId())  // ✅ Fixed: Use userId, not walletId
+                .receiverId(userReceiver.getId())
                 .amount(new BigDecimal("100.00"))
                 .description("Payment")
                 .build();
 
         // Act
-        transactionService.transfer(userSender.getId(), transferRequest);  // ✅ Fixed: Use userId
+        transactionService.transfer(userSender.getId(), transferRequest);
 
         // Assert - Sender balance
         Wallet updatedWalletSender = walletRepository.findById(walletSender.getId()).orElseThrow();
@@ -123,7 +123,7 @@ public class TransactionServiceTest {
                 "Should have 2 transaction records (OUT + IN)");
 
         // Assert - Same groupId
-        String groupId = transactions.get(0).getGroupId();
+        String groupId = transactions.getFirst().getGroupId();
         assertTrue(transactions.stream().allMatch(t -> t.getGroupId().equals(groupId)),
                 "Both transactions should have same groupId");
 
@@ -135,7 +135,7 @@ public class TransactionServiceTest {
     }
 
     /**
-     * ✅ TEST 2: Insufficient balance - should Roll back
+     * TEST 2: Insufficient balance - should Roll back
      */
     @Test
     @DisplayName("Transfer - Insufficient Balance (Rollback)")
@@ -167,7 +167,7 @@ public class TransactionServiceTest {
     }
 
     /**
-     * ✅ TEST 3: Self transfer - should fail
+     * TEST 3: Self transfer - should fail
      */
     @Test
     @DisplayName("Transfer - Self Transfer (Error)")
@@ -192,7 +192,7 @@ public class TransactionServiceTest {
     }
 
     /**
-     * ✅ TEST 4: Receiver not found
+     * TEST 4: Receiver not found
      */
     @Test
     @DisplayName("Transfer - Receiver Not Found")
@@ -216,7 +216,7 @@ public class TransactionServiceTest {
     }
 
     /**
-     * ✅ TEST 5: Sender not found
+     * TEST 5: Sender not found
      */
     @Test
     @DisplayName("Transfer - Sender Not Found")
@@ -240,7 +240,7 @@ public class TransactionServiceTest {
     }
 
     /**
-     * ✅ TEST 6: Multiple sequential transfers
+     * TEST 6: Multiple sequential transfers
      */
     @Test
     @DisplayName("Transfer - Multiple Transfers (Sequential)")
@@ -281,7 +281,7 @@ public class TransactionServiceTest {
     }
 
     /**
-     * ✅ TEST 7: Transaction records integrity
+     * TEST 7: Transaction records integrity
      */
     @Test
     @DisplayName("Transfer - Transaction Records (Integrity Check)")
@@ -338,7 +338,7 @@ public class TransactionServiceTest {
     }
 
     /**
-     * ✅ TEST 8: Zero amount transfer
+     * TEST 8: Zero amount transfer
      */
     @Test
     @DisplayName("Transfer - Zero Amount (No change)")
