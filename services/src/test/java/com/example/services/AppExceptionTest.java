@@ -23,7 +23,7 @@ class AppExceptionTest {
         );
 
         assertEquals(ErrorCode.INSUFFICIENT_BALANCE, exception.getErrorCode());
-        assertEquals("Insufficient Balance", exception.getMessage());
+        assertEquals("Insufficient balance", exception.getMessage());
     }
 
     @Test
@@ -33,7 +33,8 @@ class AppExceptionTest {
         });
 
         assertNotNull(exception);
-        assertEquals("User Not Found", exception.getMessage());
+        assertEquals(ErrorCode.BAD_REQUEST, exception.getErrorCode());
+        assertEquals("Bad request", exception.getMessage());
     }
 }
 

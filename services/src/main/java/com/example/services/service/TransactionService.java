@@ -60,7 +60,7 @@ public class TransactionService {
             log.debug("Lock ordering (deadlock prevention) - first: {}, second: {}", firstId, secondId);
 
             // S3: Lock wallets in consistent order
-            var wallet1 = walletRepository.findByUserIdForUpdate(firstId)
+            var walletSender = walletRepository.findByUserIdForUpdate(firstId)
                     .orElseThrow(() -> {
                         log.error("Wallet not found - userId: {}", firstId);
                         return new AppException(
@@ -68,7 +68,7 @@ public class TransactionService {
                         );
                     });
 
-            var wallet2 = walletRepository.findByUserIdForUpdate(secondId)
+            var walletReceiver = walletRepository.findByUserIdForUpdate(secondId)
                     .orElseThrow(() -> {
                         log.error("Wallet not found - userId: {}", secondId);
                         return new AppException(
@@ -79,8 +79,8 @@ public class TransactionService {
             log.debug("Both wallets locked in consistent order");
 
             // S4: Determine sender and receiver
-            var senderWallet = senderId.equals(wallet1.getUser().getId()) ? wallet1 : wallet2;
-            var receiverWallet = senderId.equals(wallet1.getUser().getId()) ? wallet2 : wallet1;
+            var senderWallet = senderId.equals(walletSender.getUser().getId()) ? walletSender : walletReceiver;
+            var receiverWallet = senderId.equals(walletSender.getUser().getId()) ? walletReceiver : walletSender;
 
             log.debug("Sender: {}, Receiver: {}",
                     senderWallet.getUser().getId(), receiverWallet.getUser().getId());
@@ -132,7 +132,7 @@ public class TransactionService {
                     .build();
             transactionRepository.save(senderTransaction);
 
-            // S11: Save receiver transaction
+            // S11: Receiver leg: no idempotency key (unique on column; lookup uses sender row only)
             var receiverTransaction = Transaction.builder()
                     .wallet(receiverWallet)
                     .type(TransactionType.TRANSFER)
@@ -140,7 +140,6 @@ public class TransactionService {
                     .description("Transfer from " + senderId)
                     .relatedWallet(senderWallet)
                     .groupId(groupId)
-                    .idempotencyKey(idempotencyKey)
                     .build();
             transactionRepository.save(receiverTransaction);
 
