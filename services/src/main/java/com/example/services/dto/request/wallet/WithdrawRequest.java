@@ -1,4 +1,4 @@
-package com.example.services.dto.request;
+package com.example.services.dto.request.wallet;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.DecimalMin;
@@ -10,13 +10,12 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "Deposit request")
-public class DepositRequest {
+@NoArgsConstructor
+@Schema(description = "Withdraw request")
+public class WithdrawRequest {
     @NotNull(message = "Amount can't be null")
     @DecimalMin(value = "0.01", message = "Amount must be greater than 0")
-    @Schema(description = "Deposit amount")
+    @Schema(description = "Withdraw amount")
     private BigDecimal amount;
-
 }

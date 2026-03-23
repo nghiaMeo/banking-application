@@ -1,9 +1,8 @@
-package com.example.services.dto.request;
+package com.example.services.dto.request.wallet;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

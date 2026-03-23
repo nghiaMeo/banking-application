@@ -1,10 +1,9 @@
 package com.example.services.transaction;
 
 
-import com.example.services.dto.request.TransferRequest;
+import com.example.services.dto.request.wallet.TransferRequest;
 import com.example.services.entity.User;
 import com.example.services.entity.Wallet;
-import com.example.services.exception.AppException;
 import com.example.services.repository.TransactionRepository;
 import com.example.services.repository.UserRepository;
 import com.example.services.repository.WalletRepository;

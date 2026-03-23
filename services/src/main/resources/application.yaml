@@ -6,7 +6,16 @@ spring:
     url: jdbc:postgresql://localhost:5432/bank
     username: nghiadev
     password: nghia
-
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 60000ms
+      jedis:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
   jpa:
     hibernate:
       ddl-auto: update
@@ -28,6 +37,8 @@ jwt:
   secret: Wzm99ojqlOKdLVXO+TzxUmhgcD8Slz/ml0VsyU1q4VA=
   expiration: 3600000
   refresh-expiration: 604800000
+
+
 
 
 logging:

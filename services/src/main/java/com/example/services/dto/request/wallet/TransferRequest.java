@@ -1,4 +1,4 @@
-package com.example.services.dto.request;
+package com.example.services.dto.request.wallet;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.DecimalMin;
