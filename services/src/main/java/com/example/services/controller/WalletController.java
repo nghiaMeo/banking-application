@@ -1,8 +1,8 @@
 package com.example.services.controller;
 
-import com.example.services.dto.request.DepositRequest;
-import com.example.services.dto.request.TransferRequest;
-import com.example.services.dto.request.WithdrawRequest;
+import com.example.services.dto.request.wallet.DepositRequest;
+import com.example.services.dto.request.wallet.TransferRequest;
+import com.example.services.dto.request.wallet.WithdrawRequest;
 import com.example.services.dto.response.APIResponse;
 import com.example.services.dto.response.TransactionResponse;
 import com.example.services.service.TransactionService;

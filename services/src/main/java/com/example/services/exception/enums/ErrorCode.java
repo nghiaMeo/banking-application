@@ -13,6 +13,11 @@ public enum ErrorCode {
     USER_NOT_LOGGED_IN(401, "User not logged in", HttpStatus.UNAUTHORIZED),
     USER_LOGIN_FAILED(401, "User login failed", HttpStatus.UNAUTHORIZED),
 
+    // OTP Errors
+    OTP_EXPIRED(401, "OTP expired", HttpStatus.UNAUTHORIZED),
+    OTP_INVALID(402, "OTP invalid", HttpStatus.UNAUTHORIZED),
+    OTP_MANY_REQUEST(403, "Too many OTP requests. Try again after 1 minute", HttpStatus.UNAUTHORIZED),
+
     // Email errors
     EMAIL_ALREADY_EXISTS(409, "Email already exists", HttpStatus.CONFLICT),
     EMAIL_NOT_EXISTS(404, "Email not exists", HttpStatus.NOT_FOUND),
