@@ -1,6 +1,6 @@
 package com.example.services.mapper;
 
-import com.example.services.dto.request.UpdateWalletRequest;
+import com.example.services.dto.request.wallet.UpdateWalletRequest;
 import com.example.services.dto.response.WalletResponse;
 import com.example.services.entity.Wallet;
 import org.mapstruct.Mapper;

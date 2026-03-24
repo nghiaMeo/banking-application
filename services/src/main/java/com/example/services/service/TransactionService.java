@@ -1,6 +1,6 @@
 package com.example.services.service;
 
-import com.example.services.dto.request.TransferRequest;
+import com.example.services.dto.request.wallet.TransferRequest;
 import com.example.services.entity.Transaction;
 import com.example.services.entity.TransactionType;
 import com.example.services.exception.AppException;

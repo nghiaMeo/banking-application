@@ -1,7 +1,6 @@
 package com.example.services.transaction;
 
-import com.example.services.dto.request.TransferRequest;
-import com.example.services.entity.Transaction;
+import com.example.services.dto.request.wallet.TransferRequest;
 import com.example.services.entity.TransactionType;
 import com.example.services.entity.User;
 import com.example.services.entity.Wallet;
@@ -19,7 +18,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
