@@ -1,11 +1,12 @@
 server:
   port: 8080
-
 spring:
+  config:
+    import: optional:file:.env[.properties]
   datasource:
-    url: jdbc:postgresql://localhost:5432/bank
-    username: nghiadev
-    password: nghia
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
   data:
     redis:
       host: localhost
@@ -34,12 +35,9 @@ springdoc:
     path: /v3/api-docs
 
 jwt:
-  secret: Wzm99ojqlOKdLVXO+TzxUmhgcD8Slz/ml0VsyU1q4VA=
-  expiration: 3600000
-  refresh-expiration: 604800000
-
-
-
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION}
 
 logging:
   level:
