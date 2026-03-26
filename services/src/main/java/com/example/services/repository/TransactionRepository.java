@@ -15,7 +15,8 @@ import java.util.UUID;
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, UUID> {
 
-    Page<Transaction> findByWalletId(UUID userId, Pageable pageable);
+    @Query("SELECT t FROM Transaction t WHERE t.wallet.id = :walletId")
+    Page<Transaction> findByWalletId(@Param("walletId") UUID walletId, Pageable pageable);
 
     Page<Transaction> findByGroupId(String groupId, Pageable pageable);
 

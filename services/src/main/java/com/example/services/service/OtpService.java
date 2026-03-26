@@ -17,7 +17,6 @@ import java.util.concurrent.TimeUnit;
 public class OtpService {
 
     private final RedisTemplate<String, Object> redisTemplate;
-    private static final int OTP_LENGTH = 6;
     private static final int OTP_TTL_MINUTES = 2;
     private static final String OTP_KEY_PREFIX = "OTP:";
 
@@ -40,7 +39,7 @@ public class OtpService {
         redisTemplate.opsForValue().set(key, otp,
                 Duration.ofMinutes(OTP_TTL_MINUTES)
         );
-        log.info("✅ OTP generated and saved to Redis - key: {}, TTL: {}min",
+        log.info("OTP generated and saved to Redis - key: {}, TTL: {}min",
                 key, OTP_TTL_MINUTES);
 
         return otp;
@@ -60,17 +59,17 @@ public class OtpService {
         var storedOtp = redisTemplate.opsForValue().get(key);
 
         if (storedOtp == null) {
-            log.warn("⏰ OTP expired for email: {}", email);
+            log.warn("OTP expired for email: {}", email);
             throw new AppException(ErrorCode.OTP_EXPIRED);
         }
 
         if (!storedOtp.toString().equals(providedOtp)) {
-            log.warn("❌ Invalid OTP for email: {}", email);
+            log.warn("Invalid OTP for email: {}", email);
             throw new AppException(ErrorCode.OTP_INVALID);
         }
 
         redisTemplate.delete(key);
-        log.info("✅ OTP verified and deleted for email: {}", email);
+        log.info("OTP verified and deleted for email: {}", email);
         return true;
     }
 
@@ -82,7 +81,8 @@ public class OtpService {
         log.info("Checking Rate Limit for email: " + email);
 
         var key = "RATE_LIMIT:" + email;
-        var count = (Integer) redisTemplate.opsForValue().get(key);
+        var rawCount = redisTemplate.opsForValue().get(key);
+        Integer count = rawCount != null ? Integer.parseInt(rawCount.toString()) : null;
 
         if (count != null && count >= 5) {
             log.warn("Rate limit exceeded for email: {} (count: {})", email, count);
@@ -91,7 +91,7 @@ public class OtpService {
 
         var newCount = redisTemplate.opsForValue().increment(key);
         log.debug(" Rate limit counter - email: {}, count: {}", email, newCount);
-        if (newCount == 1) {
+        if (newCount != null && newCount == 1L) {
             redisTemplate.expire(key, Duration.ofMinutes(1));
             log.debug("Rate limit TTL set to 1 minute");
         }
@@ -118,9 +118,10 @@ public class OtpService {
      * Helper: Get remaining rate limit attempts
      */
     public int getRemainingTempts(String email) {
-        var key = "RATE LIMIT:" + email;
-        var count = (Integer) redisTemplate.opsForValue().get(key);
-        return Math.max(0, 5 - (count != null ? count : 0));
+        var key = "RATE_LIMIT:" + email;
+        var rawCount = redisTemplate.opsForValue().get(key);
+        int count = rawCount != null ? Integer.parseInt(rawCount.toString()) : 0;
+        return Math.max(0, 5 - count);
     }
 
 

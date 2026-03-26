@@ -32,15 +32,21 @@ import java.util.UUID;
 @Slf4j
 public class WalletService {
 
+    private static final int DEFAULT_PAGE_SIZE = 10;
+    private static final int MAX_PAGE_SIZE = 50;
+
     private final WalletRepository walletRepository;
     private final WalletMapper walletMapper;
     private final TransactionMapper transactionMapper;
     private final TransactionRepository transactionRepository;
 
     public Page<TransactionResponse> getTransactions(UUID walletId, int page, int size) {
+        int safePage = Math.max(0, page);
+        int safeSize = size <= 0 ? DEFAULT_PAGE_SIZE : Math.min(MAX_PAGE_SIZE, size);
+
         Pageable pageable = PageRequest.of(
-                page,
-                size,
+                safePage,
+                safeSize,
                 Sort.by(Sort.Direction.DESC, "createdAt")
         );
         Page<Transaction> transactions = transactionRepository.findByWalletId(walletId, pageable);

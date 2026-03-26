@@ -5,7 +5,6 @@ import com.example.services.dto.request.CreateUserRequest;
 import com.example.services.dto.request.LoginRequest;
 import com.example.services.dto.response.APIResponse;
 import com.example.services.dto.response.AuthResponse;
-import com.example.services.dto.response.UserResponse;
 import com.example.services.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

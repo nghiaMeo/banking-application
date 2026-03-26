@@ -2,7 +2,6 @@ package com.example.services.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -27,6 +26,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers(
                                 "/api/auth/register", "/api/auth/login", "/api/auth/refresh"
+                        ).permitAll()
+                        .requestMatchers(
+                                "/api/auth/otp/**"
                         ).permitAll()
                         .requestMatchers(
                                 "/swagger-ui/**",
