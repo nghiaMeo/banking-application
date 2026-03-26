@@ -4,7 +4,7 @@ import com.example.services.dto.request.otp.RequestOtpRequest;
 import com.example.services.dto.request.otp.ResetPasswordRequest;
 import com.example.services.dto.request.otp.VerifyOtpRequest;
 import com.example.services.dto.response.APIResponse;
-import com.example.services.exception.AppException;
+import com.example.services.dto.response.ApiResponseFactory;
 import com.example.services.service.AuthService;
 import com.example.services.service.OtpService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -37,20 +37,9 @@ public class AuthOtpController {
     public APIResponse<Object> requestOtp(@Valid @RequestBody RequestOtpRequest request) {
 
         log.info("OTP request from email: {}", request.getEmail());
-
-        try {
-            otpService.checkRateLimit(request.getEmail());
-
-            var otp = otpService.generateOtp(request.getEmail());
-
-            return APIResponse.<Object>builder()
-                    .message("OTP sent to your email. Valid for 2 minutes.")
-                    .build();
-        } catch (AppException e) {
-            return APIResponse.<Object>builder()
-                    .message(e.getMessage())
-                    .build();
-        }
+        otpService.checkRateLimit(request.getEmail());
+        otpService.generateOtp(request.getEmail());
+        return ApiResponseFactory.ok("OTP sent to your email. Valid for 2 minutes.");
     }
 
     /**Verify OTP
@@ -61,17 +50,8 @@ public class AuthOtpController {
     @PostMapping("/verify-otp")
     @Operation(summary = "Verify OTP")
     public APIResponse<Object> verifyOtp(@Valid @RequestBody VerifyOtpRequest request) {
-        try {
-            otpService.verifyOtp(request.getEmail(), request.getOtp());
-
-            return APIResponse.<Object>builder()
-                    .message("OTP verified successfully")
-                    .build();
-        } catch (AppException e) {
-            return APIResponse.<Object>builder()
-                    .message(e.getMessage())
-                    .build();
-        }
+        otpService.verifyOtp(request.getEmail(), request.getOtp());
+        return ApiResponseFactory.ok("OTP verified successfully");
     }
 
     /*Reset Password with OTP
@@ -86,17 +66,9 @@ public class AuthOtpController {
     @PostMapping("/request-password")
     @Operation(summary = "Reset password using OTP")
     public APIResponse<Object> requestPassword(@Valid @RequestBody ResetPasswordRequest request) {
-        try {
-            otpService.verifyOtp(request.getEmail(), request.getOtp());
-            authService.resetPassword(request.getEmail(), request.getNewPassword());
-            return APIResponse.<Object>builder()
-                    .message("Password reset successfully")
-                    .build();
-        } catch (AppException e) {
-            return APIResponse.<Object>builder()
-                    .message(e.getMessage())
-                    .build();
-        }
+        otpService.verifyOtp(request.getEmail(), request.getOtp());
+        authService.resetPassword(request.getEmail(), request.getNewPassword());
+        return ApiResponseFactory.ok("Password reset successfully");
     }
 
     // Check OTP status (for testing)
@@ -113,8 +85,6 @@ public class AuthOtpController {
                 "remainingAttempts", attempts
         );
 
-        return APIResponse.builder()
-                .message(status.toString())
-                .build();
+        return ApiResponseFactory.ok(status.toString());
     }
 }

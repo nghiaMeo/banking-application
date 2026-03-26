@@ -9,13 +9,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.security.Security;
 import java.util.ArrayList;
 
 @Component
@@ -36,13 +34,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // Step 2: Validate token
 
             if (token != null && jwtUtil.validateToken(token)) {
+                // Only allow ACCESS token to authenticate requests protected by SecurityConfig
+                var tokenType = jwtUtil.getTokenType(token);
+                if (!"ACCESS".equals(tokenType)) {
+                    log.debug("Skipping authentication for tokenType={}", tokenType);
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+
                 // Step 3: Extract userId từ token
                 var userId = jwtUtil.extractUserId(token);
+                if (userId == null) {
+                    log.warn("Token validated but userId is missing");
+                    filterChain.doFilter(request, response);
+                    return;
+                }
 
                 // Step 4: Create Authentication object
                 UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(userId, null, new ArrayList<>()
-                        );
+                        new UsernamePasswordAuthenticationToken(userId, null, new ArrayList<>());
 
                 // Step 5: Set Authentication to SecurityContext
                 authentication.setDetails(
