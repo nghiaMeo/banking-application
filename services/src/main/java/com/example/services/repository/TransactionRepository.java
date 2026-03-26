@@ -19,6 +19,12 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
 
     Page<Transaction> findByGroupId(String groupId, Pageable pageable);
 
+    /**
+     * Transactions of all wallets that belong to a given user.
+     * Using property path: transaction.wallet.user.id
+     */
+    Page<Transaction> findByWalletUserId(UUID userId, Pageable pageable);
+
 
     @Query("SELECT t FROM Transaction t WHERE t.wallet.user.id = :userId AND t.type = :type ORDER BY t.createdAt DESC")
     Page<Transaction> findByUserAndType(@Param("userId") UUID userId, @Param("type") TransactionType type, Pageable pageable);

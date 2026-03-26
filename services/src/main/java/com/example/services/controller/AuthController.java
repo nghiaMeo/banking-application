@@ -4,8 +4,8 @@ package com.example.services.controller;
 import com.example.services.dto.request.CreateUserRequest;
 import com.example.services.dto.request.LoginRequest;
 import com.example.services.dto.response.APIResponse;
+import com.example.services.dto.response.ApiResponseFactory;
 import com.example.services.dto.response.AuthResponse;
-import com.example.services.dto.response.UserResponse;
 import com.example.services.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -39,9 +39,7 @@ public class AuthController {
 
     })
     public APIResponse<AuthResponse> register(@RequestBody @Valid CreateUserRequest request) {
-        return APIResponse.<AuthResponse>builder()
-                .data(authService.register(request))
-                .build();
+        return ApiResponseFactory.ok(authService.register(request));
     }
 
     @PostMapping("/login")
@@ -59,9 +57,7 @@ public class AuthController {
 
     })
     public APIResponse<AuthResponse> login(@RequestBody @Valid LoginRequest request) {
-        return APIResponse.<AuthResponse>builder()
-                .data(authService.login(request))
-                .build();
+        return ApiResponseFactory.ok(authService.login(request));
     }
 
     @PostMapping("/refresh")
@@ -80,9 +76,7 @@ public class AuthController {
     public APIResponse<AuthResponse> refreshAccessToken(@RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");
         AuthResponse refreshed = authService.refreshAccessToken(token);
-        return APIResponse.<AuthResponse>builder()
-                .data(refreshed)
-                .build();
+        return ApiResponseFactory.ok(refreshed);
     }
 
 }
