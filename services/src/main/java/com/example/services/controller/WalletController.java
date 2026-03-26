@@ -4,6 +4,8 @@ import com.example.services.dto.request.wallet.DepositRequest;
 import com.example.services.dto.request.wallet.TransferRequest;
 import com.example.services.dto.request.wallet.WithdrawRequest;
 import com.example.services.dto.response.APIResponse;
+import com.example.services.dto.response.ApiResponseFactory;
+import com.example.services.dto.response.PaginationResponse;
 import com.example.services.dto.response.TransactionResponse;
 import com.example.services.service.TransactionService;
 import com.example.services.service.WalletService;
@@ -13,7 +15,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -44,9 +45,7 @@ public class WalletController {
     public APIResponse<BigDecimal> getBalance(Authentication authentication) {
         var userId = UUID.fromString(authentication.getName());
         var balance = walletService.getBalance(userId);
-        return APIResponse.<BigDecimal>builder()
-                .data(balance)
-                .build();
+        return ApiResponseFactory.ok(balance);
     }
 
     @PostMapping("/deposit")
@@ -65,10 +64,7 @@ public class WalletController {
         var userId = authentication.getName();
         var newBalance = walletService.deposit(request, UUID.fromString(userId));
 
-        return APIResponse.<BigDecimal>builder()
-                .data(newBalance)
-                .message("Deposit successful")
-                .build();
+        return ApiResponseFactory.ok("Deposit successful", newBalance);
     }
 
 
@@ -87,10 +83,7 @@ public class WalletController {
 
         var userId = UUID.fromString(authentication.getName());
         var newBalance = walletService.withdraw( request, userId);
-        return APIResponse.<BigDecimal>builder()
-                .data(newBalance)
-                .message("Withdraw successful")
-                .build();
+        return ApiResponseFactory.ok("Withdraw successful", newBalance);
     }
 
 
@@ -110,9 +103,7 @@ public class WalletController {
         var senderId = UUID.fromString(authentication.getName());
         transactionService.transfer(senderId, request);
 
-        return APIResponse.<String>builder()
-                .message("transfer Successfully")
-                .build();
+        return ApiResponseFactory.<String>ok("transfer Successfully");
     }
 
 
@@ -124,25 +115,20 @@ public class WalletController {
             @ApiResponse(responseCode = "404", description = "Wallet not found"),
             @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
-    public APIResponse<Page<TransactionResponse>>
-
-    getTransactions(
+    public APIResponse<PaginationResponse<TransactionResponse>>
+            getTransactions(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             Authentication authentication) {
 
         var userId = UUID.fromString(authentication.getName());
-        var currentUserWallet = walletService.getWalletByUserId(userId);
-
-        Page<TransactionResponse> transactions = walletService.getTransactions(
-                currentUserWallet.getId(),
+        PaginationResponse<TransactionResponse> transactions = walletService.getTransactionsByUserId(
+                userId,
                 page,
                 size
         );
 
-        return APIResponse.<Page<TransactionResponse>>builder()
-                .data(transactions)
-                .build();
+        return ApiResponseFactory.ok(transactions);
     }
 
 }

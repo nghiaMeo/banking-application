@@ -4,6 +4,7 @@ import com.example.services.dto.request.otp.RequestOtpRequest;
 import com.example.services.dto.request.otp.ResetPasswordRequest;
 import com.example.services.dto.request.otp.VerifyOtpRequest;
 import com.example.services.dto.response.APIResponse;
+import com.example.services.dto.response.ApiResponseFactory;
 import com.example.services.service.AuthService;
 import com.example.services.service.OtpService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -38,9 +39,7 @@ public class AuthOtpController {
         log.info("OTP request from email: {}", request.getEmail());
         otpService.checkRateLimit(request.getEmail());
         otpService.generateOtp(request.getEmail());
-        return APIResponse.<Object>builder()
-                .message("OTP sent to your email. Valid for 2 minutes.")
-                .build();
+        return ApiResponseFactory.ok("OTP sent to your email. Valid for 2 minutes.");
     }
 
     /**Verify OTP
@@ -52,9 +51,7 @@ public class AuthOtpController {
     @Operation(summary = "Verify OTP")
     public APIResponse<Object> verifyOtp(@Valid @RequestBody VerifyOtpRequest request) {
         otpService.verifyOtp(request.getEmail(), request.getOtp());
-        return APIResponse.<Object>builder()
-                .message("OTP verified successfully")
-                .build();
+        return ApiResponseFactory.ok("OTP verified successfully");
     }
 
     /*Reset Password with OTP
@@ -71,9 +68,7 @@ public class AuthOtpController {
     public APIResponse<Object> requestPassword(@Valid @RequestBody ResetPasswordRequest request) {
         otpService.verifyOtp(request.getEmail(), request.getOtp());
         authService.resetPassword(request.getEmail(), request.getNewPassword());
-        return APIResponse.<Object>builder()
-                .message("Password reset successfully")
-                .build();
+        return ApiResponseFactory.ok("Password reset successfully");
     }
 
     // Check OTP status (for testing)
@@ -90,8 +85,6 @@ public class AuthOtpController {
                 "remainingAttempts", attempts
         );
 
-        return APIResponse.builder()
-                .message(status.toString())
-                .build();
+        return ApiResponseFactory.ok(status.toString());
     }
 }

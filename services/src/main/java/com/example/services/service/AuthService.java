@@ -38,7 +38,7 @@ public class AuthService {
      */
     @Transactional(rollbackFor = Exception.class)
     public void resetPassword(String email, String newPassword) throws AppException {
-        log.info("🔐 Resetting password for email: {}", email);
+        log.info("Resetting password for email: {}", email);
 
         var user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> {

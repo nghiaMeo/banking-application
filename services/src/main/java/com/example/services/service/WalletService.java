@@ -3,6 +3,7 @@ package com.example.services.service;
 import com.example.services.dto.request.wallet.DepositRequest;
 import com.example.services.dto.request.wallet.UpdateWalletRequest;
 import com.example.services.dto.request.wallet.WithdrawRequest;
+import com.example.services.dto.response.PaginationResponse;
 import com.example.services.dto.response.TransactionResponse;
 import com.example.services.dto.response.WalletResponse;
 import com.example.services.entity.Transaction;
@@ -32,29 +33,41 @@ import java.util.UUID;
 @Slf4j
 public class WalletService {
 
-    private static final int DEFAULT_PAGE_SIZE = 10;
-    private static final int MAX_PAGE_SIZE = 50;
-
     private final WalletRepository walletRepository;
     private final WalletMapper walletMapper;
     private final TransactionMapper transactionMapper;
     private final TransactionRepository transactionRepository;
 
-    public Page<TransactionResponse> getTransactions(UUID walletId, int page, int size) {
-        int safePage = Math.max(0, page);
-        int safeSize = size <= 0 ? DEFAULT_PAGE_SIZE : Math.min(MAX_PAGE_SIZE, size);
+    public PaginationResponse<TransactionResponse> getTransactionsByUserId(UUID userId, int page, int size) {
+        if (page < 0) {
+            throw new AppException(ErrorCode.BAD_REQUEST);
+        }
+        // Hard cap to protect DB in case of abuse
+        if (size <= 0 || size > 100) {
+            throw new AppException(ErrorCode.BAD_REQUEST);
+        }
 
         Pageable pageable = PageRequest.of(
-                safePage,
-                safeSize,
+                page,
+                size,
                 Sort.by(Sort.Direction.DESC, "createdAt")
         );
-        Page<Transaction> transactions = transactionRepository.findByWalletId(walletId, pageable);
 
-        log.info("Retrieved {} transactions for wallet: {}",
-                transactions.getContent().size(), walletId);
+        Page<Transaction> transactions = transactionRepository.findByWalletUserId(userId, pageable);
+        Page<TransactionResponse> mapped = transactions.map(transactionMapper::toTransactionResponse);
 
-        return transactions.map(transactionMapper::toTransactionResponse);
+        log.info("Retrieved {} transactions for user: {}",
+                mapped.getContent().size(), userId);
+
+        return PaginationResponse.<TransactionResponse>builder()
+                .content(mapped.getContent())
+                .page(mapped.getNumber())
+                .size(mapped.getSize())
+                .totalElements(mapped.getTotalElements())
+                .totalPages(mapped.getTotalPages())
+                .first(mapped.isFirst())
+                .last(mapped.isLast())
+                .build();
     }
 
 

@@ -16,13 +16,8 @@ import java.util.UUID;
 @Table(
         name = "transaction",
         indexes = {
-                // Speed up wallet transaction pagination & sorting
                 @Index(name = "idx_transaction_wallet_created_at", columnList = "wallet_id, created_at"),
-                @Index(name = "idx_transaction_created_at", columnList = "created_at"),
-                // Speed up transfer linkage queries (optional, helps analytics)
-                @Index(name = "idx_transaction_related_wallet_id", columnList = "related_wallet_id"),
                 @Index(name = "idx_transaction_group_id", columnList = "group_id"),
-                // Already unique but keeping an explicit index name helps readability/DB tools
                 @Index(name = "idx_transaction_idempotency_key", columnList = "idempotency_key")
         }
 )
