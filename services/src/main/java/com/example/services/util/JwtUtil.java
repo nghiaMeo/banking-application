@@ -99,7 +99,7 @@ public class JwtUtil {
 
     public String extractEmail(String token) {
         Claims claims = extractClaims(token);
-        return claims != null ? claims.getSubject() : null;
+        return claims != null ? (String) claims.get("email") : null;
     }
 
     public boolean isTokenExpired(String token) {
