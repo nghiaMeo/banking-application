@@ -1,0 +1,56 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: banking-services-app
+    environment:
+      DB_URL: jdbc:postgresql://${DB_HOST:-host.docker.internal}:${DB_PORT:-5432}/${DB_NAME:-bank}
+      DB_USERNAME: ${DB_USERNAME:-nghiadev}
+      DB_PASSWORD: ${DB_PASSWORD:-nghia}
+      JWT_SECRET: ${JWT_SECRET:-Wzm99ojqlOKdLVXO+TzxUmhgcD8Slz/ml0VsyU1q4VA=}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-3600000}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION:-604800000}
+      REDIS_HOST: ${REDIS_HOST:-host.docker.internal}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:17-alpine
+    profiles: ["infra"]
+    container_name: banking-services-postgres
+    environment:
+      POSTGRES_DB: bank
+      POSTGRES_USER: nghiadev
+      POSTGRES_PASSWORD: nghia
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nghiadev -d bank"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:8.6.1-alpine3.23
+    profiles: ["infra"]
+    container_name: banking-services-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
